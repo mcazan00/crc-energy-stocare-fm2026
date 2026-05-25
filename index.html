@@ -1,165 +1,545 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generator Raport Client — FM Stocare 2026 | CRC Energy</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --surface-2: #F5F8FA;
+      --border: #E2E8F0;
+      --border-soft: #EEF2F7;
+      --text: #1A2332;
+      --text-2: #64748B;
+      --text-3: #94A3B8;
+      --blue: #005B7F;
+      --cyan: #009BD1;
+      --green: #1E8C4E;
+      --amber: #F0A500;
+      --red: #C0392B;
+      --r-lg: 12px;
+      --r-md: 8px;
+      --r-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+    }
 
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans)}
-.tool-header{background:#005B7F;color:#fff;border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem}
-.tool-header h1{font-size:18px;font-weight:500;margin-bottom:2px}
-.tool-header p{font-size:13px;opacity:.75}
-.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
-.section-title{font-size:13px;font-weight:500;color:#009BD1;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem;display:flex;align-items:center;gap:6px}
-.cui-row{display:flex;gap:8px;align-items:center;margin-bottom:.5rem}
-.cui-row input{flex:1;height:40px;font-size:16px;padding:0 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
-.cui-row button{height:40px;padding:0 16px;background:#005B7F;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;white-space:nowrap}
-.cui-row button:hover{background:#009BD1}
-.firm-card{background:#005B7F;color:#fff;border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:none}
-.firm-name{font-size:18px;font-weight:500;margin-bottom:4px}
-.firm-meta{font-size:13px;opacity:.75;display:flex;gap:12px;flex-wrap:wrap}
-.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-left:8px}
-.badge-ok{background:#1E8C4E;color:#fff}
-.badge-warn{background:#F0A500;color:#fff}
-.badge-err{background:#C0392B;color:#fff}
-.badge-demo{background:#F0A500;color:#404040}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
-@media(max-width:560px){.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
-.info-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
-.info-row:last-child{border-bottom:none}
-.info-label{color:var(--color-text-secondary)}
-.info-val{font-weight:500;color:var(--color-text-primary);text-align:right}
-.elig-row{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0}
-.elig-icon{font-size:16px;width:20px;text-align:center}
-.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem;text-align:center}
-.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
-.metric-val{font-size:20px;font-weight:500;color:#005B7F}
-.metric-val.ok{color:#1E8C4E}
-.metric-val.err{color:#C0392B}
-.metric-val.warn{color:#F0A500}
-.param-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:4px;display:block}
-.param-label span{font-size:11px;color:var(--color-text-tertiary)}
-.param-input{width:100%;height:36px;padding:0 10px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);margin-bottom:.75rem}
-.param-select{width:100%;height:36px;padding:0 8px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);margin-bottom:.75rem}
-.sim-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
-.sim-row:last-child{border-bottom:none}
-.sim-bar-wrap{width:120px;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;display:inline-block;margin:0 8px;vertical-align:middle}
-.sim-bar{height:100%;background:#009BD1;border-radius:3px;transition:width .3s}
-.sim-score{font-weight:500;min-width:32px;text-align:right}
-.opis-row{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
-.opis-row:last-child{border-bottom:none}
-.opis-num{min-width:20px;color:var(--color-text-secondary);font-size:12px;padding-top:1px}
-.opis-name{flex:1}
-.opis-tag{font-size:10px;padding:1px 6px;border-radius:10px;font-weight:500;white-space:nowrap;margin-left:4px}
-.opis-tag.blocker{background:#FDECEC;color:#C0392B}
-.opis-tag.ok{background:#E6F5EC;color:#1E8C4E}
-.progress-wrap{height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;margin:.5rem 0}
-.progress-bar{height:100%;background:#1E8C4E;border-radius:3px;transition:width .3s}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
-.btn-primary{padding:10px 18px;background:#005B7F;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px}
-.btn-primary:hover{background:#009BD1}
-.btn-secondary{padding:10px 18px;background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px}
-.btn-secondary:hover{background:var(--color-background-secondary)}
-.warn-box{background:#FFF8E7;border:0.5px solid #F0A500;border-radius:var(--border-radius-md);padding:.75rem 1rem;font-size:13px;color:#7A5200;margin-top:.5rem}
-.result-area{display:none}
-.loading-msg{font-size:14px;color:var(--color-text-secondary);padding:.5rem 0;display:none}
-</style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<h2 class="sr-only">Generator rapoarte client FM 2026 — introduce CUI pentru analiză completă</h2>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
 
-<div class="tool-header">
-  <h1><i class="ti ti-report-analytics" aria-hidden="true"></i> Generator raport client — FM Stocare 2026</h1>
-  <p>Introduce CUI-ul clientului pentru a genera automat analiza de eligibilitate și simularea de grant</p>
-</div>
+    .container { max-width: 960px; margin: 0 auto; }
 
-<div class="section">
-  <div class="section-title"><i class="ti ti-building" aria-hidden="true"></i> Identificare firmă</div>
-  <div class="cui-row">
-    <input type="text" id="cuiInput" placeholder="ex: 12345678" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')">
-    <button onclick="fetchCUI()"><i class="ti ti-search" aria-hidden="true"></i> Caută</button>
-    <button onclick="resetAll()" style="background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary)"><i class="ti ti-refresh" aria-hidden="true"></i></button>
-  </div>
-  <div class="loading-msg" id="loadingMsg"><i class="ti ti-loader" aria-hidden="true"></i> Se caută datele firmei...</div>
-</div>
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #005B7F 0%, #007aab 100%);
+      color: #fff;
+      border-radius: var(--r-lg);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow-md);
+    }
+    .app-header-left h1 {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .app-header-left p { font-size: 13px; opacity: .75; }
+    .app-header-logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      opacity: .9;
+      white-space: nowrap;
+    }
 
-<div class="firm-card" id="firmCard">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-    <div>
-      <div class="firm-name" id="firmName">—</div>
-      <div class="firm-meta" id="firmMeta"></div>
+    /* Cards / Sections */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Search */
+    .search-row { display: flex; gap: 8px; align-items: center; }
+    .search-row input {
+      flex: 1;
+      height: 44px;
+      font-size: 16px;
+      padding: 0 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-row input:focus { border-color: var(--cyan); }
+    .btn {
+      height: 44px;
+      padding: 0 20px;
+      border: none;
+      border-radius: var(--r-md);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--cyan); }
+    .btn-ghost {
+      background: var(--surface-2);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      padding: 0 14px;
+    }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { background: var(--surface-2); }
+
+    /* Loading */
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-2);
+      padding: 8px 0 0;
+    }
+    .loading.visible { display: flex; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
+
+    /* Firm card */
+    .firm-card {
+      background: linear-gradient(135deg, #005B7F 0%, #007aab 100%);
+      color: #fff;
+      border-radius: var(--r-lg);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: none;
+      box-shadow: var(--shadow-md);
+    }
+    .firm-card.visible { display: block; }
+    .firm-card-inner { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+    .firm-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .firm-meta { font-size: 12px; opacity: .75; display: flex; gap: 10px; flex-wrap: wrap; }
+    .firm-meta span::before { content: '·'; margin-right: 10px; opacity: .5; }
+    .firm-meta span:first-child::before { content: ''; margin: 0; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .badge-ok { background: #1E8C4E; color: #fff; }
+    .badge-err { background: #C0392B; color: #fff; }
+    .badge-warn { background: #F0A500; color: #404040; }
+    .badge-info { background: rgba(255,255,255,.2); color: #fff; }
+    .badge-demo { background: #F0A500; color: #404040; }
+    .badge-source { background: rgba(255,255,255,.15); color: rgba(255,255,255,.9); }
+
+    /* Results */
+    .result-area { display: none; }
+    .result-area.visible { display: block; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media(max-width: 640px) {
+      .grid2 { grid-template-columns: 1fr; }
+      .grid3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media(max-width: 420px) {
+      .grid3 { grid-template-columns: 1fr; }
+    }
+
+    /* Info rows */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-2); flex-shrink: 0; }
+    .info-val { font-weight: 500; color: var(--text); text-align: right; font-size: 12.5px; }
+
+    /* Eligibility */
+    .elig-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .elig-row:last-child { border-bottom: none; }
+    .elig-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+
+    /* Parameters */
+    .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width: 560px) { .params-grid { grid-template-columns: 1fr; } }
+    .param-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 5px;
+    }
+    .param-label em { font-style: normal; color: var(--text-3); font-weight: 400; }
+    .param-input, .param-select {
+      width: 100%;
+      height: 38px;
+      padding: 0 10px;
+      font-size: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      color: var(--text);
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .param-input:focus, .param-select:focus { border-color: var(--cyan); }
+
+    /* Metric cards */
+    .metric-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-md);
+      padding: 12px 14px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .metric-label { font-size: 11px; color: var(--text-2); margin-bottom: 3px; }
+    .metric-val { font-size: 22px; font-weight: 700; color: var(--blue); }
+    .metric-val.ok { color: var(--green); }
+    .metric-val.err { color: var(--red); }
+    .metric-val.warn { color: var(--amber); }
+
+    /* Scoring */
+    .sim-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .sim-row:last-child { border-bottom: none; }
+    .sim-label { flex: 1; color: var(--text); }
+    .sim-label.highlight { color: var(--cyan); font-weight: 500; }
+    .sim-bar-wrap {
+      width: 80px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .sim-bar { height: 100%; background: var(--cyan); border-radius: 3px; transition: width .3s; }
+    .sim-score { font-weight: 600; min-width: 34px; text-align: right; font-size: 13px; }
+
+    /* Document list */
+    .opis-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .opis-row:last-child { border-bottom: none; }
+    .opis-num { min-width: 22px; color: var(--text-3); font-size: 12px; padding-top: 1px; }
+    .opis-name { flex: 1; color: var(--text); }
+    .opis-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .opis-tag.blocker { background: #FDECEC; color: var(--red); }
+    .opis-tag.ok { background: #E6F5EC; color: var(--green); }
+    .opis-tag.missing { background: #FDECEC; color: var(--red); }
+
+    /* Progress */
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--text-2);
+    }
+    .progress-header strong { color: var(--text); }
+    .progress-wrap {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-bar { height: 100%; background: var(--green); border-radius: 3px; transition: width .4s; }
+
+    /* Warn box */
+    .warn-box {
+      background: #FFF8E7;
+      border: 1px solid #F0A500;
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      font-size: 12.5px;
+      color: #7A5200;
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    /* Action buttons row */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .btn-action {
+      height: 42px;
+      padding: 0 20px;
+      border: none;
+      border-radius: var(--r-md);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .2s;
+    }
+    .btn-action:active { transform: scale(.97); }
+    .btn-action.primary { background: var(--blue); color: #fff; }
+    .btn-action.primary:hover { background: var(--cyan); }
+    .btn-action.secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-action.secondary:hover { background: var(--surface-2); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1A2332;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all .25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Error state */
+    .error-box {
+      background: #FDECEC;
+      border: 1px solid #E8A0A0;
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--red);
+      margin-top: 8px;
+      display: none;
+    }
+    .error-box.visible { display: flex; gap: 8px; align-items: center; }
+
+    .card.no-mb { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-header-left">
+      <h1><i class="ti ti-battery-charging"></i> Generator raport client — FM Stocare 2026</h1>
+      <p>Introduce CUI-ul clientului pentru analiză de eligibilitate și simulare de grant</p>
     </div>
-    <div id="firmBadges"></div>
+    <div class="app-header-logo">CRC ENERGY</div>
   </div>
-</div>
 
-<div class="result-area" id="resultArea">
-
-<div class="grid2" style="margin-bottom:1rem">
-  <div class="section" style="margin-bottom:0">
-    <div class="section-title"><i class="ti ti-id" aria-hidden="true"></i> Date firmă</div>
-    <div id="firmRows"></div>
-  </div>
-  <div class="section" style="margin-bottom:0">
-    <div class="section-title"><i class="ti ti-shield-check" aria-hidden="true"></i> Eligibilitate</div>
-    <div id="eligRows"></div>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section-title"><i class="ti ti-settings" aria-hidden="true"></i> Parametri proiect</div>
-  <div class="grid2">
-    <div>
-      <label class="param-label">Putere instalată MW <span>(min 1 MW)</span></label>
-      <input class="param-input" type="number" id="pMW" value="5" min="0.1" step="0.1" oninput="recalc()">
-      <label class="param-label">Capacitate MWh <span>(min 2× MW)</span></label>
-      <input class="param-input" type="number" id="pMWh" value="12" min="0.1" step="0.1" oninput="recalc()">
-      <label class="param-label">Cheltuieli eligibile EUR</label>
-      <input class="param-input" type="number" id="pElig" value="4000000" step="10000" oninput="recalc()">
+  <!-- Search -->
+  <div class="card">
+    <div class="section-title"><i class="ti ti-building-factory-2"></i> Identificare firmă</div>
+    <div class="search-row">
+      <input type="text" id="cuiInput" placeholder="ex: 40228874"
+        maxlength="10" inputmode="numeric"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeydown="if(event.key==='Enter') fetchCUI()">
+      <button class="btn btn-primary" onclick="fetchCUI()">
+        <i class="ti ti-search"></i> Caută
+      </button>
+      <button class="btn btn-ghost" onclick="resetAll()" title="Resetează">
+        <i class="ti ti-refresh"></i>
+      </button>
     </div>
-    <div>
-      <label class="param-label">EUR/MWh solicitat <span>(max 69.000)</span></label>
-      <input class="param-input" type="number" id="pEurMWh" value="52000" step="1000" oninput="recalc()">
-      <label class="param-label">Cheltuieli neeligibile EUR</label>
-      <input class="param-input" type="number" id="pNonElig" value="200000" step="10000" oninput="recalc()">
-      <label class="param-label">ATR obținut</label>
-      <select class="param-select" id="pATR" onchange="recalc()">
-        <option value="da">Da — ATR obținut</option>
-        <option value="nu">Nu — în curs de obținere</option>
-      </select>
+    <div class="loading" id="loadingMsg">
+      <i class="ti ti-loader spin"></i> Se preiau datele firmei din ANAF/ONRC...
+    </div>
+    <div class="error-box" id="errorBox">
+      <i class="ti ti-alert-circle"></i>
+      <span id="errorText"></span>
     </div>
   </div>
-</div>
 
-<div class="grid3">
-  <div class="section" style="margin-bottom:0">
-    <div class="section-title"><i class="ti ti-ruler" aria-hidden="true"></i> Dimensionare</div>
-    <div id="dimResult"></div>
+  <!-- Firm card -->
+  <div class="firm-card" id="firmCard">
+    <div class="firm-card-inner">
+      <div>
+        <div class="firm-name" id="firmName">—</div>
+        <div class="firm-meta" id="firmMeta"></div>
+      </div>
+      <div class="badges" id="firmBadges"></div>
+    </div>
   </div>
-  <div class="section" style="margin-bottom:0">
-    <div class="section-title"><i class="ti ti-cash" aria-hidden="true"></i> Calcul grant</div>
-    <div id="grantResult"></div>
-  </div>
-  <div class="section" style="margin-bottom:0">
-    <div class="section-title"><i class="ti ti-trophy" aria-hidden="true"></i> Simulare punctaj</div>
-    <div id="simResult"></div>
-  </div>
-</div>
 
-<div class="section" style="margin-top:1rem">
-  <div class="section-title"><i class="ti ti-checklist" aria-hidden="true"></i> Opis documente</div>
-  <div id="opisProgress"></div>
-  <div id="opisResult"></div>
-</div>
+  <!-- Results -->
+  <div class="result-area" id="resultArea">
 
-<div class="btn-row">
-  <button class="btn-primary" onclick="generatePDF()"><i class="ti ti-file-download" aria-hidden="true"></i> Generează raport PDF</button>
-  <button class="btn-secondary" onclick="sendToChat()"><i class="ti ti-send" aria-hidden="true"></i> Trimite rezumat în chat ↗</button>
-</div>
+    <!-- Date firmă + Eligibilitate -->
+    <div class="grid2">
+      <div class="card no-mb">
+        <div class="section-title"><i class="ti ti-id"></i> Date firmă</div>
+        <div id="firmRows"></div>
+      </div>
+      <div class="card no-mb">
+        <div class="section-title"><i class="ti ti-shield-check"></i> Verificare eligibilitate</div>
+        <div id="eligRows"></div>
+      </div>
+    </div>
 
-</div>
+    <!-- Parametri proiect -->
+    <div class="card">
+      <div class="section-title"><i class="ti ti-settings-2"></i> Parametri proiect</div>
+      <div class="params-grid">
+        <div>
+          <label class="param-label">Putere instalată MW <em>(min 1 MW)</em></label>
+          <input class="param-input" type="number" id="pMW" value="5" min="0.1" step="0.1" oninput="recalc()">
+          <label class="param-label">Capacitate MWh <em>(min 2× MW)</em></label>
+          <input class="param-input" type="number" id="pMWh" value="12" min="0.1" step="0.1" oninput="recalc()">
+          <label class="param-label">Cheltuieli eligibile EUR</label>
+          <input class="param-input" type="number" id="pElig" value="4000000" step="10000" oninput="recalc()">
+        </div>
+        <div>
+          <label class="param-label">EUR/MWh solicitat <em>(max 69.000)</em></label>
+          <input class="param-input" type="number" id="pEurMWh" value="52000" step="1000" oninput="recalc()">
+          <label class="param-label">Cheltuieli neeligibile EUR</label>
+          <input class="param-input" type="number" id="pNonElig" value="200000" step="10000" oninput="recalc()">
+          <label class="param-label">ATR obținut</label>
+          <select class="param-select" id="pATR" onchange="recalc()">
+            <option value="da">Da — ATR obținut</option>
+            <option value="nu">Nu — în curs de obținere</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Rezultate calcul -->
+    <div class="grid3">
+      <div class="card no-mb">
+        <div class="section-title"><i class="ti ti-ruler-measure"></i> Dimensionare</div>
+        <div id="dimResult"></div>
+      </div>
+      <div class="card no-mb">
+        <div class="section-title"><i class="ti ti-cash"></i> Calcul grant</div>
+        <div id="grantResult"></div>
+      </div>
+      <div class="card no-mb">
+        <div class="section-title"><i class="ti ti-trophy"></i> Competitivitate</div>
+        <div id="simResult"></div>
+      </div>
+    </div>
+
+    <!-- Opis documente -->
+    <div class="card">
+      <div class="section-title"><i class="ti ti-checklist"></i> Opis documente necesare</div>
+      <div id="opisProgress"></div>
+      <div id="opisResult"></div>
+    </div>
+
+    <!-- Acțiuni -->
+    <div class="action-row">
+      <button class="btn-action primary" onclick="generatePDF()">
+        <i class="ti ti-file-download"></i> Generează raport PDF
+      </button>
+      <button class="btn-action secondary" onclick="copyResume()">
+        <i class="ti ti-clipboard-copy"></i> Copiază rezumat
+      </button>
+    </div>
+
+  </div><!-- /result-area -->
+</div><!-- /container -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
+/* =========================================================
+   State & constants
+   ========================================================= */
 let firmData = null;
 
-// Descrieri CAEN divizia 35 (energie) — relevante pentru eligibilitate FM 2026
 const CAEN_DESC = {
   '3511':'Producția de energie electrică',
   '3512':'Transportul energiei electrice',
@@ -171,427 +551,492 @@ const CAEN_DESC = {
   '3530':'Producția și furnizarea de abur și aer condiționat',
 };
 
-function hasCaen35(caen){ return caen && String(caen).startsWith('35'); }
+/* =========================================================
+   Helpers
+   ========================================================= */
+function hasCaen35(c){ return c && String(c).startsWith('35'); }
 
+function fmt(n){ return n != null ? Number(n).toLocaleString('ro-RO') : '—'; }
+
+function showToast(msg, icon='ti-check'){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<i class="ti ${icon}"></i> ${msg}`;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function showError(msg){
+  const b = document.getElementById('errorBox');
+  document.getElementById('errorText').textContent = msg;
+  b.classList.add('visible');
+}
+function hideError(){ document.getElementById('errorBox').classList.remove('visible'); }
+
+/* =========================================================
+   Mock / fallback data
+   ========================================================= */
 function buildMockData(cui){
   return {
     cui, denumire:'ENERGY INVEST SRL',
     caen_principal:'3511', caen_desc:'Producția de energie electrică',
-    forma_juridica:'SRL', capital_social:null,
-    activa:true, insolvent:false, _demo:true,
-    nr_reg_com:'J40/1234/2020',
-    adresa:'Str. Energiei nr. 1, București'
+    forma_juridica:'SRL', activa:true, insolvent:false, _demo:true,
+    nr_reg_com:'J40/1234/2020', adresa:'Str. Energiei nr. 1, București',
+    _vatRegistered:false, _administrators:[], _allCaen:[], _status:'',
+    _sursa:'demo'
   };
 }
 
-// Normalizează răspunsul demoanaf.ro în formatul intern al aplicației
+/* =========================================================
+   Normalize demoanaf.ro response
+   ========================================================= */
 function normalizeDemoAnaf(raw, cui){
-  const caen = raw.primaryCaen || raw.caenCode || '';
+  const caen = String(raw.primaryCaen || raw.caenCode || '');
+  const addr = raw.address || (raw.headquartersAddress
+    ? [raw.headquartersAddress.street, raw.headquartersAddress.number,
+       raw.headquartersAddress.locality, raw.headquartersAddress.county]
+      .filter(Boolean).join(', ')
+    : '—');
   return {
     cui: raw.cui || cui,
     denumire: raw.name || '—',
     caen_principal: caen,
-    caen_desc: CAEN_DESC[caen] || raw.caenDescription || '',
+    caen_desc: CAEN_DESC[caen] || '',
     forma_juridica: raw.legalForm || '—',
-    capital_social: null, // demoanaf.ro nu expune capitalul social în datele de bază
     activa: !raw.inactive,
-    insolvent: raw.isInsolvent || false,
+    insolvent: !!raw.isInsolvent,
     nr_reg_com: raw.registrationNumber || '—',
-    adresa: raw.address || (raw.headquartersAddress
-      ? [raw.headquartersAddress.street, raw.headquartersAddress.number,
-         raw.headquartersAddress.locality, raw.headquartersAddress.county].filter(Boolean).join(', ')
-      : '—'),
+    adresa: addr,
     _demo: false,
     _sursa: 'demoanaf.ro',
     _status: raw.onrcStatusLabel || '',
-    _vatRegistered: raw.vatRegistered || false,
+    _vatRegistered: !!raw.vatRegistered,
     _administrators: raw.administrators || [],
-    _allCaen: raw.authorizedCaenCodes || [],
+    _allCaen: (raw.authorizedCaenCodes || []).map(String),
   };
 }
 
-async function fetchCUI(){
-  const raw = document.getElementById('cuiInput').value.trim();
-  if(!raw){ alert('Introdu un CUI valid.'); return; }
-  document.getElementById('loadingMsg').style.display='block';
-  document.getElementById('firmCard').style.display='none';
-  document.getElementById('resultArea').style.display='none';
-  firmData = null;
-  let data = null;
-
-  // Sursă primară: demoanaf.ro (REST API gratuit, date ANAF/ONRC oficiale)
+/* =========================================================
+   Fetch company data
+   ========================================================= */
+async function tryFetch(url, timeout=7000){
+  const ctrl = new AbortController();
+  const tid = setTimeout(()=>ctrl.abort(), timeout);
   try {
-    const res = await fetch(`https://demoanaf.ro/api/company/${raw}`,{
-      signal: AbortSignal.timeout(7000)
-    });
-    if(res.ok){
-      const json = await res.json();
-      if(json && (json.cui || json.name)) data = normalizeDemoAnaf(json, raw);
-    }
-  } catch(e){}
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if(!r.ok) return null;
+    return await r.json();
+  } catch(e){ clearTimeout(tid); return null; }
+}
 
-  // Fallback: date demo dacă API-ul nu răspunde
-  if(!data){ data = buildMockData(raw); }
+async function fetchCUI(){
+  const cui = document.getElementById('cuiInput').value.trim();
+  if(!cui || cui.length < 2){ showToast('Introdu un CUI valid (minim 2 cifre)', 'ti-alert-triangle'); return; }
 
-  document.getElementById('loadingMsg').style.display='none';
-  firmData = data;
+  document.getElementById('loadingMsg').classList.add('visible');
+  document.getElementById('firmCard').classList.remove('visible');
+  document.getElementById('resultArea').classList.remove('visible');
+  hideError();
+  firmData = null;
+
+  let raw = null;
+
+  // 1. Încearcă direct demoanaf.ro
+  raw = await tryFetch(`https://demoanaf.ro/api/company/${cui}`);
+
+  // 2. Fallback prin CORS proxy dacă direct e blocat
+  if(!raw || (!raw.cui && !raw.name)){
+    raw = await tryFetch(`https://corsproxy.io/?url=https://demoanaf.ro/api/company/${cui}`);
+  }
+
+  document.getElementById('loadingMsg').classList.remove('visible');
+
+  if(raw && (raw.cui || raw.name)){
+    firmData = normalizeDemoAnaf(raw, cui);
+  } else {
+    // Date demo cu avertisment
+    firmData = buildMockData(cui);
+    showError('Nu s-au putut prelua datele reale. Se afișează date demonstrative.');
+  }
+
   renderFirm();
 }
 
+/* =========================================================
+   Render firm card
+   ========================================================= */
 function renderFirm(){
   const d = firmData;
-  document.getElementById('firmName').textContent = d.denumire || '—';
-  const meta = [];
-  if(d.cui) meta.push('CUI: '+d.cui);
-  if(d.nr_reg_com) meta.push(d.nr_reg_com);
-  if(d.adresa) meta.push(d.adresa);
-  document.getElementById('firmMeta').innerHTML = meta.join('<span style="opacity:.4"> | </span>');
+
+  document.getElementById('firmName').textContent = d.denumire;
+
+  const metaItems = [];
+  if(d.cui) metaItems.push(`CUI ${d.cui}`);
+  if(d.nr_reg_com && d.nr_reg_com !== '—') metaItems.push(d.nr_reg_com);
+  if(d.adresa && d.adresa !== '—') metaItems.push(d.adresa);
+  document.getElementById('firmMeta').innerHTML =
+    metaItems.map(i=>`<span>${i}</span>`).join('');
+
   const badges = [];
-  if(d.activa) badges.push('<span class="badge badge-ok">Activă</span>');
-  else badges.push('<span class="badge badge-err">Inactivă</span>');
-  if(d.insolvent) badges.push('<span class="badge badge-err">Insolvență</span>');
-  if(d._vatRegistered) badges.push('<span class="badge badge-ok">Plătitor TVA</span>');
+  if(d.activa) badges.push(`<span class="badge badge-ok"><i class="ti ti-circle-check" style="font-size:11px"></i> Activă</span>`);
+  else         badges.push(`<span class="badge badge-err"><i class="ti ti-circle-x" style="font-size:11px"></i> Inactivă</span>`);
+  if(d.insolvent) badges.push(`<span class="badge badge-err"><i class="ti ti-alert-triangle" style="font-size:11px"></i> Insolvență</span>`);
+  if(d._vatRegistered) badges.push(`<span class="badge badge-ok">Plătitor TVA</span>`);
   if(d._status && !d.activa) badges.push(`<span class="badge badge-warn">${d._status}</span>`);
-  if(d._demo) badges.push('<span class="badge badge-demo">Date demo</span>');
-  else if(d._sursa) badges.push(`<span class="badge" style="background:#E8F4F8;color:#005B7F">${d._sursa}</span>`);
-  document.getElementById('firmBadges').innerHTML = badges.join(' ');
-  document.getElementById('firmCard').style.display='block';
+  if(d._demo) badges.push(`<span class="badge badge-demo"><i class="ti ti-flask" style="font-size:11px"></i> Date demo</span>`);
+  else        badges.push(`<span class="badge badge-source"><i class="ti ti-database" style="font-size:11px"></i> ${d._sursa}</span>`);
+  document.getElementById('firmBadges').innerHTML = badges.join('');
 
-  // Verificare CAEN 35 și pe codurile secundare autorizate
+  document.getElementById('firmCard').classList.add('visible');
+
+  // Date firmă
   const allCaen = d._allCaen || [];
-  const caen35secondary = allCaen.filter(c=>String(c).startsWith('35') && c!==d.caen_principal);
-  let caenVal = (d.caen_principal||'—') + (d.caen_desc ? ' – '+d.caen_desc : '');
-  if(caen35secondary.length) caenVal += ` <span style="color:#1E8C4E;font-size:11px">(+${caen35secondary.length} cod${caen35secondary.length>1?'uri':''} 35x secundar${caen35secondary.length>1?'e':''})</span>`;
-
-  const adminStr = (d._administrators||[]).map(a=>a.name+(a.role?' ('+a.role+')':'')).join(', ') || '—';
+  const caen35sec = allCaen.filter(c=>hasCaen35(c) && c!==d.caen_principal);
+  let caenVal = (d.caen_principal||'—') + (d.caen_desc ? ` – ${d.caen_desc}` : '');
+  if(caen35sec.length) caenVal += ` <em style="color:#1E8C4E;font-size:11px;font-style:normal">(+${caen35sec.length} cod${caen35sec.length>1?'uri':''} 35x autorizat${caen35sec.length>1?'e':''})</em>`;
+  const adminStr = d._administrators.length
+    ? d._administrators.map(a=>a.name+(a.role?` (${a.role})`:'')).join(', ')
+    : '—';
 
   const rows = [
-    ['Denumire', d.denumire||'—'],
-    ['CUI', d.cui||'—'],
-    ['Nr. Reg. Com.', d.nr_reg_com||'—'],
+    ['Denumire', d.denumire],
+    ['CUI', d.cui],
+    ['Nr. Reg. Com.', d.nr_reg_com],
     ['CAEN principal', caenVal],
-    ['Formă juridică', d.forma_juridica||'—'],
+    ['Formă juridică', d.forma_juridica],
     ['Administrator', adminStr],
   ];
-  document.getElementById('firmRows').innerHTML = rows.map(r=>`<div class="info-row"><span class="info-label">${r[0]}</span><span class="info-val" style="max-width:200px;font-size:12px">${r[1]}</span></div>`).join('');
+  document.getElementById('firmRows').innerHTML = rows
+    .map(([l,v])=>`<div class="info-row"><span class="info-label">${l}</span><span class="info-val">${v}</span></div>`)
+    .join('');
 
-  // Eligibilitate: CAEN 35 principal SAU în codurile autorizate secundare
-  const caenOk = hasCaen35(d.caen_principal) || allCaen.some(c=>String(c).startsWith('35'));
-  const activaOk = !!d.activa;
-  const capitalOk = true; // demoanaf.ro nu expune capitalul social; se presupune constituit dacă firma e activă
-  const insolventOk = !d.insolvent;
+  // Eligibilitate
+  const caenOk = hasCaen35(d.caen_principal) || allCaen.some(c=>hasCaen35(c));
   const caenLabel = hasCaen35(d.caen_principal)
-    ? 'CAEN Divizia 35 (cod principal)'
-    : caenOk ? 'CAEN Divizia 35 (cod secundar autorizat)' : 'CAEN Divizia 35 — lipsă';
-  const eligChecks = [
+    ? 'CAEN Divizia 35 — cod principal'
+    : caenOk ? 'CAEN Divizia 35 — cod secundar autorizat'
+             : 'CAEN Divizia 35 — lipsă';
+  const checks = [
     [caenOk, caenLabel],
-    [activaOk, 'Firmă activă'],
-    [capitalOk, 'Capital social constituit'],
-    [insolventOk, 'Nu este în insolvență'],
-    [true, 'Entitate comercială (SRL/SA/etc.)'],
-    [true, 'Proprietar/concesionar teren'],
+    [d.activa, 'Firmă activă'],
+    [true, 'Capital social constituit'],
+    [!d.insolvent, 'Nu este în insolvență'],
+    [true, 'Entitate comercială (SRL / SA / etc.)'],
+    [true, 'Proprietar / concesionar teren'],
   ];
-  document.getElementById('eligRows').innerHTML = eligChecks.map(([ok,label])=>`
-    <div class="elig-row">
-      <span class="elig-icon" style="color:${ok?'#1E8C4E':'#C0392B'}"><i class="ti ti-${ok?'circle-check':'circle-x'}" aria-hidden="true"></i></span>
-      <span style="color:var(--color-text-primary)">${label}</span>
-    </div>`).join('');
+  document.getElementById('eligRows').innerHTML = checks
+    .map(([ok,label])=>`
+      <div class="elig-row">
+        <span class="elig-icon" style="color:${ok?'#1E8C4E':'#C0392B'}">
+          <i class="ti ti-${ok?'circle-check':'circle-x'}"></i>
+        </span>
+        <span>${label}</span>
+      </div>`)
+    .join('');
 
-  document.getElementById('resultArea').style.display='block';
+  document.getElementById('resultArea').classList.add('visible');
   recalc();
 }
 
+/* =========================================================
+   Recalculate (live on input change)
+   ========================================================= */
 function recalc(){
   if(!firmData) return;
-  const MW = parseFloat(document.getElementById('pMW').value)||0;
-  const MWh = parseFloat(document.getElementById('pMWh').value)||0;
-  const elig = parseFloat(document.getElementById('pElig').value)||0;
+  const MW     = parseFloat(document.getElementById('pMW').value)||0;
+  const MWh    = parseFloat(document.getElementById('pMWh').value)||0;
+  const elig   = parseFloat(document.getElementById('pElig').value)||0;
   const eurMWh = parseFloat(document.getElementById('pEurMWh').value)||0;
-  const nonElig = parseFloat(document.getElementById('pNonElig').value)||0;
-  const atr = document.getElementById('pATR').value;
+  const nonElig= parseFloat(document.getElementById('pNonElig').value)||0;
+  const atr    = document.getElementById('pATR').value;
 
-  const ratio = MW>0 ? MWh/MW : 0;
+  const ratio   = MW>0 ? MWh/MW : 0;
   const ratioOk = MW>=1 && ratio>=2;
-  const hours = MW>0 ? MWh/MW : 0;
+  const eurMWhOk= eurMWh<=69000;
 
+  /* Dimensionare */
   document.getElementById('dimResult').innerHTML = `
-    <div class="metric-card" style="margin-bottom:.5rem">
+    <div class="metric-card">
       <div class="metric-label">Raport MWh/MW</div>
-      <div class="metric-val ${ratio>=2?'ok':'err'}">${ratio.toFixed(2)} h</div>
+      <div class="metric-val ${ratio>=2?'ok':'err'}">${ratio.toFixed(2)}h</div>
     </div>
     <div class="info-row"><span class="info-label">Putere</span><span class="info-val">${MW} MW</span></div>
     <div class="info-row"><span class="info-label">Capacitate</span><span class="info-val">${MWh} MWh</span></div>
-    <div class="info-row"><span class="info-label">EUR/MWh solicitat</span><span class="info-val">${eurMWh.toLocaleString('ro-RO')}</span></div>
-    <div class="info-row"><span class="info-label">Cost/MW</span><span class="info-val">${MW>0?Math.round(elig/MW).toLocaleString('ro-RO'):0} EUR</span></div>
-    ${!ratioOk?'<div class="warn-box"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Raport sub 2:1 — neeligibil!</div>':''}
+    <div class="info-row"><span class="info-label">EUR/MWh</span><span class="info-val">${fmt(eurMWh)}</span></div>
+    <div class="info-row"><span class="info-label">Cost/MW</span><span class="info-val">${MW>0?fmt(Math.round(elig/MW)):0} EUR</span></div>
+    ${!ratioOk?`<div class="warn-box"><i class="ti ti-alert-triangle"></i> Raport sub 2:1 — neeligibil tehnic!</div>`:''}
+    ${!eurMWhOk?`<div class="warn-box"><i class="ti ti-alert-triangle"></i> EUR/MWh depășește plafonul de 69.000!</div>`:''}
   `;
 
-  const grantMax1 = eurMWh * MWh;
-  const grantMax2 = elig;
-  const grantMax3 = 15000000;
-  const grant = Math.min(grantMax1, grantMax2, grantMax3);
+  /* Grant */
+  const grant       = Math.min(eurMWh*MWh, elig, 15_000_000);
   const intensitate = elig>0 ? grant/elig*100 : 0;
   const contributie = elig - grant;
-  const prefinantare = grant * 0.20;
+  const prefinantare= grant * 0.20;
 
   document.getElementById('grantResult').innerHTML = `
-    <div class="metric-card" style="margin-bottom:.5rem">
-      <div class="metric-label">Grant maxim</div>
-      <div class="metric-val ok">${Math.round(grant).toLocaleString('ro-RO')} EUR</div>
+    <div class="metric-card">
+      <div class="metric-label">Grant maxim estimat</div>
+      <div class="metric-val ok">${fmt(Math.round(grant))} EUR</div>
     </div>
-    <div class="info-row"><span class="info-label">Intensitate</span><span class="info-val">${intensitate.toFixed(1)}%</span></div>
-    <div class="info-row"><span class="info-label">Contribuție proprie</span><span class="info-val">${Math.round(contributie).toLocaleString('ro-RO')} EUR</span></div>
-    <div class="info-row"><span class="info-label">Prefinanțare 20%</span><span class="info-val">${Math.round(prefinantare).toLocaleString('ro-RO')} EUR</span></div>
-    <div class="info-row"><span class="info-label">Total proiect</span><span class="info-val">${Math.round(elig+nonElig).toLocaleString('ro-RO')} EUR</span></div>
-    ${grant>=15000000?'<div class="warn-box">Plafonat la 15M EUR/companie</div>':''}
+    <div class="info-row"><span class="info-label">Intensitate ajutor</span><span class="info-val">${intensitate.toFixed(1)}%</span></div>
+    <div class="info-row"><span class="info-label">Contribuție proprie</span><span class="info-val">${fmt(Math.round(contributie))} EUR</span></div>
+    <div class="info-row"><span class="info-label">Prefinanțare 20%</span><span class="info-val">${fmt(Math.round(prefinantare))} EUR</span></div>
+    <div class="info-row"><span class="info-label">Total proiect</span><span class="info-val">${fmt(Math.round(elig+nonElig))} EUR</span></div>
+    ${grant>=15_000_000?`<div class="warn-box"><i class="ti ti-info-circle"></i> Plafonat la 15M EUR / companie</div>`:''}
   `;
 
+  /* Simulare punctaj */
   const scenarios = [
-    {label:'Agresiv (35k)',eur:35000},
-    {label:'Median (52k)',eur:52000},
-    {label:'Client ('+Math.round(eurMWh/1000)+'k)',eur:eurMWh},
-    {label:'Plafon (69k)',eur:69000},
+    {label:'Agresiv',   eur:35000},
+    {label:'Median',    eur:52000},
+    {label:'Client',    eur:eurMWh, highlight:true},
+    {label:'Plafon',    eur:69000},
   ];
-  const minEur = 35000;
   document.getElementById('simResult').innerHTML = scenarios.map(s=>{
-    const score = Math.max(0, Math.round((1-(s.eur-minEur)/(69000-minEur))*100));
+    const sc = Math.max(0, Math.round((1-(s.eur-35000)/(69000-35000))*100));
+    const col = sc>=70?'#1E8C4E':sc>=40?'#F0A500':'#C0392B';
     return `<div class="sim-row">
-      <span style="flex:1;color:${s.label.startsWith('Client')?'#009BD1':'var(--color-text-primary)'}">${s.label}</span>
-      <div class="sim-bar-wrap"><div class="sim-bar" style="width:${score}%"></div></div>
-      <span class="sim-score" style="color:${score>=70?'#1E8C4E':score>=40?'#F0A500':'#C0392B'}">${score}p</span>
+      <span class="sim-label${s.highlight?' highlight':''}">${s.label} (${Math.round(s.eur/1000)}k)</span>
+      <div class="sim-bar-wrap"><div class="sim-bar" style="width:${sc}%;background:${col}"></div></div>
+      <span class="sim-score" style="color:${col}">${sc}p</span>
     </div>`;
   }).join('');
 
+  /* Opis documente */
   const docs = [
-    {n:'Cerere de finanțare (MySMIS)',blocker:true},
-    {n:'Act constitutiv + statut actualizat',blocker:true},
-    {n:'Certificate constatatoare ONRC',blocker:true},
-    {n:'CUI / CF al solicitantului',blocker:true},
-    {n:'Declarații solicitant (DNSH, ajutoare stat)',blocker:true},
-    {n:'Studiu de fezabilitate (max. 2 ani)',blocker:true},
-    {n:'Deviz general al investiției',blocker:true},
-    {n:'ATR – Aviz Tehnic de Racordare',blocker:atr==='nu'},
-    {n:'Documente proprietate / concesiune teren',blocker:true},
-    {n:'Bilanț contabil ultimii 2 ani',blocker:false},
-    {n:'Cazier fiscal al firmei',blocker:false},
-    {n:'Cazier judiciar administrator',blocker:false},
-    {n:'Contract/ofertă echipamente BESS',blocker:false},
-    {n:'Plan de afaceri',blocker:false},
+    {n:'Cerere de finanțare (MySMIS)', blocker:true},
+    {n:'Act constitutiv + statut actualizat', blocker:true},
+    {n:'Certificate constatatoare ONRC', blocker:true},
+    {n:'CUI / certificat de înregistrare fiscală', blocker:true},
+    {n:'Declarații solicitant (DNSH, ajutoare de stat)', blocker:true},
+    {n:'Studiu de fezabilitate (max. 2 ani vechime)', blocker:true},
+    {n:'Deviz general al investiției', blocker:true},
+    {n:'ATR – Aviz Tehnic de Racordare', blocker:atr==='nu', missing:atr==='nu'},
+    {n:'Documente proprietate / concesiune teren', blocker:true},
+    {n:'Bilanț contabil ultimii 2 ani', blocker:false},
+    {n:'Cazier fiscal al firmei', blocker:false},
+    {n:'Cazier judiciar administrator', blocker:false},
+    {n:'Contract / ofertă echipamente BESS', blocker:false},
+    {n:'Plan de afaceri', blocker:false},
   ];
   const atrOk = atr==='da';
-  const ready = docs.filter((_,i)=>i!==7 || atrOk).length;
-  const total = docs.length;
-  const pct = Math.round(ready/total*100);
+  const ready = docs.filter((_,i)=>i!==7||atrOk).length;
+  const total  = docs.length;
+  const pct    = Math.round(ready/total*100);
+
   document.getElementById('opisProgress').innerHTML = `
-    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+    <div class="progress-header">
       <span>${ready}/${total} documente identificate</span>
-      <span style="font-weight:500">${pct}%</span>
+      <strong>${pct}%</strong>
     </div>
     <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
   `;
   document.getElementById('opisResult').innerHTML = docs.map((doc,i)=>{
     const isATR = i===7;
-    const avail = !isATR || atrOk;
+    const missing = isATR && !atrOk;
+    let tag = '';
+    if(missing)      tag = `<span class="opis-tag missing">Lipsă</span>`;
+    else if(doc.blocker) tag = `<span class="opis-tag blocker">Obligatoriu</span>`;
+    else             tag = `<span class="opis-tag ok">Util</span>`;
     return `<div class="opis-row">
       <span class="opis-num">${i+1}.</span>
-      <span class="opis-name" style="color:var(--color-text-primary)">${doc.n}</span>
-      ${doc.blocker&&isATR&&!atrOk?'<span class="opis-tag blocker">Lipsă</span>':''}
-      ${doc.blocker&&!(isATR&&!atrOk)?'<span class="opis-tag blocker">Obligatoriu</span>':''}
-      ${!doc.blocker?'<span class="opis-tag ok">Util</span>':''}
+      <span class="opis-name">${doc.n}</span>
+      ${tag}
     </div>`;
   }).join('');
 }
 
+/* =========================================================
+   Generate PDF
+   ========================================================= */
 function generatePDF(){
-  if(!window.jspdf){ alert('Biblioteca PDF încă se încarcă. Încearcă din nou.'); return; }
+  if(!firmData){ showToast('Caută mai întâi o firmă.', 'ti-alert-triangle'); return; }
+  if(!window.jspdf){ showToast('Biblioteca PDF se încarcă, încearcă din nou.', 'ti-loader'); return; }
   const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const doc = new jsPDF({unit:'mm', format:'a4'});
   const d = firmData;
-  const W = 210, M = 15, CW = W-2*M;
-  const MW = parseFloat(document.getElementById('pMW').value)||0;
-  const MWh = parseFloat(document.getElementById('pMWh').value)||0;
-  const elig = parseFloat(document.getElementById('pElig').value)||0;
+  const W=210, M=15, CW=W-2*M;
+  const MW     = parseFloat(document.getElementById('pMW').value)||0;
+  const MWh    = parseFloat(document.getElementById('pMWh').value)||0;
+  const elig   = parseFloat(document.getElementById('pElig').value)||0;
   const eurMWh = parseFloat(document.getElementById('pEurMWh').value)||0;
-  const nonElig = parseFloat(document.getElementById('pNonElig').value)||0;
-  const atr = document.getElementById('pATR').value;
-  const ratio = MW>0 ? MWh/MW : 0;
-  const grant = Math.min(eurMWh*MWh, elig, 15000000);
-  const intensitate = elig>0 ? grant/elig*100 : 0;
-  const score = Math.max(0,Math.round((1-(eurMWh-35000)/(69000-35000))*100));
-  const today = new Date().toLocaleDateString('ro-RO');
+  const nonElig= parseFloat(document.getElementById('pNonElig').value)||0;
+  const atr    = document.getElementById('pATR').value;
+  const ratio  = MW>0?MWh/MW:0;
+  const grant  = Math.min(eurMWh*MWh, elig, 15_000_000);
+  const intens = elig>0?grant/elig*100:0;
+  const today  = new Date().toLocaleDateString('ro-RO');
   let y = 0;
 
-  function addPage(){
-    doc.addPage();
-    y = 0;
-    drawHeader();
-    y = 28;
-  }
-
   function drawHeader(){
-    doc.setFillColor(0,91,127);
-    doc.rect(0,0,W,22,'F');
-    doc.setFillColor(240,165,0);
-    doc.rect(0,22,W,3,'F');
+    doc.setFillColor(0,91,127); doc.rect(0,0,W,22,'F');
+    doc.setFillColor(240,165,0); doc.rect(0,22,W,3,'F');
     doc.setTextColor(255,255,255);
     doc.setFontSize(13); doc.setFont('helvetica','bold');
-    doc.text('CRC ENERGY',M,9);
+    doc.text('CRC ENERGY', M, 9);
     doc.setFontSize(10); doc.setFont('helvetica','normal');
-    doc.text('Fondul pentru Modernizare 2026 — Stocare Stand-Alone',M,15);
+    doc.text('Fondul pentru Modernizare 2026 — Stocare Stand-Alone', M, 15);
     doc.setFontSize(9);
-    doc.text('Raport generat: '+today,W-M,14,{align:'right'});
+    doc.text('Raport: '+today, W-M, 14, {align:'right'});
     doc.setTextColor(64,64,64);
   }
 
-  function sectionTitle(title,yy){
-    doc.setFillColor(223,241,247);
-    doc.rect(M,yy,CW,7,'F');
-    doc.setTextColor(0,91,127);
-    doc.setFontSize(9); doc.setFont('helvetica','bold');
-    doc.text(title.toUpperCase(),M+3,yy+5);
+  function addPage(){ doc.addPage(); y=0; drawHeader(); y=28; }
+
+  function secTitle(title, yy){
+    doc.setFillColor(223,241,247); doc.rect(M,yy,CW,7,'F');
+    doc.setTextColor(0,91,127); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text(title.toUpperCase(), M+3, yy+5);
     doc.setTextColor(64,64,64);
     return yy+10;
   }
 
-  function row2(label,val,yy,col){
-    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-    doc.setTextColor(120,120,120);
+  function row2(label, val, yy, col){
     const x = col===0 ? M : M+CW/2+4;
-    doc.text(label,x,yy);
-    doc.setTextColor(40,40,40);
-    doc.setFont('helvetica','bold');
-    doc.text(String(val),x+50,yy,{align:'right',maxWidth:CW/2-10});
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(120,120,120); doc.text(label, x, yy);
+    doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
+    doc.text(String(val), x+CW/2-4, yy, {align:'right', maxWidth:CW/2-10});
     doc.setFont('helvetica','normal');
-    doc.setDrawColor(220,220,220);
-    doc.line(x,yy+1,x+CW/2-4,yy+1);
+    doc.setDrawColor(220,220,220); doc.line(x, yy+1, x+CW/2-4, yy+1);
     return yy+6;
   }
 
-  drawHeader();
-  y = 30;
+  drawHeader(); y=30;
 
-  y = sectionTitle('Firma analizată',y);
+  y = secTitle('Firma analizată', y);
   let ya=y, yb=y;
-  ya = row2('Denumire',d.denumire||'—',ya,0);
-  ya = row2('CUI',d.cui||'—',ya,0);
-  ya = row2('Nr. Reg. Com.',d.nr_reg_com||'—',ya,0);
-  yb = row2('CAEN principal',(d.caen_principal||'—'),yb,1);
-  yb = row2('Formă juridică',d.forma_juridica||'—',yb,1);
-  yb = row2('Capital social',d.capital_social?(d.capital_social.toLocaleString('ro-RO')+' RON'):'—',yb,1);
+  ya = row2('Denumire', d.denumire||'—', ya, 0);
+  ya = row2('CUI', d.cui||'—', ya, 0);
+  ya = row2('Nr. Reg. Com.', d.nr_reg_com||'—', ya, 0);
+  yb = row2('CAEN principal', d.caen_principal||'—', yb, 1);
+  yb = row2('Formă juridică', d.forma_juridica||'—', yb, 1);
+  yb = row2('Administrator', d._administrators.length ? d._administrators[0].name : '—', yb, 1);
   y = Math.max(ya,yb)+4;
-  if(d._demo){ doc.setFontSize(8); doc.setTextColor(200,100,0); doc.text('⚠ Date demo — înlocuiți cu date reale de la ANAF/ONRC',M,y); y+=6; doc.setTextColor(64,64,64); }
+  if(d._demo){ doc.setFontSize(8); doc.setTextColor(200,100,0); doc.text('⚠ Date demonstrative — verificați în ANAF/ONRC', M, y); y+=6; doc.setTextColor(64,64,64); }
 
-  y = sectionTitle('Parametri proiect & dimensionare',y);
+  y = secTitle('Parametri proiect & dimensionare', y);
   ya=y; yb=y;
-  ya = row2('Putere instalată',MW+' MW',ya,0);
-  ya = row2('Capacitate',MWh+' MWh',ya,0);
-  ya = row2('Raport MWh/MW',ratio.toFixed(2)+' h',ya,0);
-  yb = row2('EUR/MWh solicitat',eurMWh.toLocaleString('ro-RO'),yb,1);
-  yb = row2('Cheltuieli eligibile',Math.round(elig).toLocaleString('ro-RO')+' EUR',yb,1);
-  yb = row2('ATR obținut',atr==='da'?'Da':'Nu — în curs',yb,1);
+  ya = row2('Putere instalată', MW+' MW', ya, 0);
+  ya = row2('Capacitate', MWh+' MWh', ya, 0);
+  ya = row2('Raport MWh/MW', ratio.toFixed(2)+' h', ya, 0);
+  yb = row2('EUR/MWh solicitat', Number(eurMWh).toLocaleString('ro-RO'), yb, 1);
+  yb = row2('Cheltuieli eligibile', Math.round(elig).toLocaleString('ro-RO')+' EUR', yb, 1);
+  yb = row2('ATR obținut', atr==='da'?'Da':'Nu — în curs', yb, 1);
   y = Math.max(ya,yb)+4;
-  if(ratio<2){ doc.setFillColor(255,242,220); doc.rect(M,y,CW,8,'F'); doc.setFontSize(8.5); doc.setTextColor(180,80,0); doc.text('⚠ Raport sub 2:1 — proiectul nu îndeplinește cerința minimă de eligibilitate tehnică!',M+3,y+5.5); y+=12; doc.setTextColor(64,64,64); }
+  if(ratio<2){ doc.setFillColor(255,242,220); doc.rect(M,y,CW,8,'F'); doc.setFontSize(8.5); doc.setTextColor(180,80,0); doc.text('⚠ Raport sub 2:1 — neeligibil tehnic!', M+3, y+5.5); y+=12; doc.setTextColor(64,64,64); }
 
-  y = sectionTitle('Calcul grant & finanțare',y);
+  y = secTitle('Calcul grant & finanțare', y);
   ya=y; yb=y;
-  ya = row2('Grant maxim estimat',Math.round(grant).toLocaleString('ro-RO')+' EUR',ya,0);
-  ya = row2('Intensitate ajutor',intensitate.toFixed(1)+'%',ya,0);
-  ya = row2('Prefinanțare 20%',Math.round(grant*0.2).toLocaleString('ro-RO')+' EUR',ya,0);
-  yb = row2('Contribuție proprie',Math.round(elig-grant).toLocaleString('ro-RO')+' EUR',yb,1);
-  yb = row2('Cheltuieli neeligibile',Math.round(nonElig).toLocaleString('ro-RO')+' EUR',yb,1);
-  yb = row2('Total investiție',Math.round(elig+nonElig).toLocaleString('ro-RO')+' EUR',yb,1);
+  ya = row2('Grant maxim estimat', Math.round(grant).toLocaleString('ro-RO')+' EUR', ya, 0);
+  ya = row2('Intensitate ajutor', intens.toFixed(1)+'%', ya, 0);
+  ya = row2('Prefinanțare 20%', Math.round(grant*0.2).toLocaleString('ro-RO')+' EUR', ya, 0);
+  yb = row2('Contribuție proprie', Math.round(elig-grant).toLocaleString('ro-RO')+' EUR', yb, 1);
+  yb = row2('Cheltuieli neeligibile', Math.round(nonElig).toLocaleString('ro-RO')+' EUR', yb, 1);
+  yb = row2('Total investiție', Math.round(elig+nonElig).toLocaleString('ro-RO')+' EUR', yb, 1);
   y = Math.max(ya,yb)+4;
 
-  y = sectionTitle('Simulare competitivitate (punctaj)',y);
-  const scs = [{l:'Agresiv (35k EUR/MWh)',e:35000},{l:'Median (52k EUR/MWh)',e:52000},{l:'Client ('+Math.round(eurMWh/1000)+'k EUR/MWh)',e:eurMWh},{l:'Plafon (69k EUR/MWh)',e:69000}];
-  scs.forEach(s=>{
-    const sc = Math.max(0,Math.round((1-(s.e-35000)/(69000-35000))*100));
-    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-    doc.setTextColor(s.l.startsWith('Client')?[0,155,209]:[64,64,64]);
-    doc.text(s.l, M, y);
-    doc.setFillColor(220,220,220);
-    doc.roundedRect(M+62,y-3.5,60,4,1,1,'F');
-    doc.setFillColor(0,155,209);
-    doc.roundedRect(M+62,y-3.5,60*sc/100,4,1,1,'F');
-    doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
-    doc.text(sc+'p',M+125,y,{align:'right'});
-    doc.setFont('helvetica','normal');
-    y+=6;
-  });
+  y = secTitle('Simulare competitivitate (punctaj)', y);
+  [{l:'Agresiv (35k EUR/MWh)',e:35000},{l:'Median (52k EUR/MWh)',e:52000},{l:'Client ('+Math.round(eurMWh/1000)+'k EUR/MWh)',e:eurMWh},{l:'Plafon (69k EUR/MWh)',e:69000}]
+    .forEach(s=>{
+      const sc = Math.max(0,Math.round((1-(s.e-35000)/(69000-35000))*100));
+      doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+      doc.setTextColor(s.l.startsWith('Client')?[0,155,209]:[64,64,64]);
+      doc.text(s.l, M, y);
+      doc.setFillColor(220,220,220); doc.roundedRect(M+65,y-3.5,55,4,1,1,'F');
+      doc.setFillColor(0,155,209); doc.roundedRect(M+65,y-3.5,55*sc/100,4,1,1,'F');
+      doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
+      doc.text(sc+'p', M+123, y, {align:'right'});
+      doc.setFont('helvetica','normal'); y+=6;
+    });
   y+=2;
 
-  if(y>240){ addPage(); }
-  y = sectionTitle('Opis documente necesare',y);
+  if(y>240) addPage();
+  y = secTitle('Opis documente necesare', y);
   const docs=[
-    {n:'Cerere de finanțare (MySMIS)',b:true},
-    {n:'Act constitutiv + statut',b:true},
-    {n:'Certificate constatatoare ONRC',b:true},
-    {n:'CUI / CF solicitant',b:true},
-    {n:'Declarații DNSH și ajutoare stat',b:true},
-    {n:'Studiu de fezabilitate (max. 2 ani)',b:true},
-    {n:'Deviz general investiție',b:true},
-    {n:'ATR – Aviz Tehnic de Racordare',b:atr==='nu'},
-    {n:'Documente proprietate teren',b:true},
-    {n:'Bilanț contabil (2 ani)',b:false},
-    {n:'Cazier fiscal',b:false},
-    {n:'Cazier judiciar administrator',b:false},
-    {n:'Contract/ofertă echipamente BESS',b:false},
-    {n:'Plan de afaceri',b:false},
+    {n:'Cerere de finanțare (MySMIS)',b:true},{n:'Act constitutiv + statut',b:true},
+    {n:'Certificate constatatoare ONRC',b:true},{n:'CUI / CF solicitant',b:true},
+    {n:'Declarații DNSH și ajutoare stat',b:true},{n:'Studiu de fezabilitate (max. 2 ani)',b:true},
+    {n:'Deviz general investiție',b:true},{n:'ATR – Aviz Tehnic de Racordare',b:atr==='nu'},
+    {n:'Documente proprietate teren',b:true},{n:'Bilanț contabil (2 ani)',b:false},
+    {n:'Cazier fiscal',b:false},{n:'Cazier judiciar administrator',b:false},
+    {n:'Contract/ofertă echipamente BESS',b:false},{n:'Plan de afaceri',b:false},
   ];
   docs.forEach((dc,i)=>{
-    if(y>275){addPage();}
-    const isATRmissing = i===7 && atr==='nu';
-    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-    doc.setTextColor(64,64,64);
-    doc.text((i+1)+'. '+dc.n,M+4,y);
-    if(isATRmissing){ doc.setTextColor(192,57,43); doc.setFont('helvetica','bold'); doc.text('LIPSĂ',M+CW,y,{align:'right'}); }
-    else if(dc.b){ doc.setTextColor(0,91,127); doc.setFont('helvetica','bold'); doc.text('OBLIGATORIU',M+CW,y,{align:'right'}); }
-    else{ doc.setTextColor(120,120,120); doc.text('util',M+CW,y,{align:'right'}); }
-    doc.setFont('helvetica','normal'); doc.setDrawColor(230,230,230);
-    doc.line(M,y+1,M+CW,y+1);
+    if(y>275) addPage();
+    const missing = i===7 && atr==='nu';
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(64,64,64);
+    doc.text((i+1)+'. '+dc.n, M+4, y);
+    if(missing){ doc.setTextColor(192,57,43); doc.setFont('helvetica','bold'); doc.text('LIPSĂ', M+CW, y, {align:'right'}); }
+    else if(dc.b){ doc.setTextColor(0,91,127); doc.setFont('helvetica','bold'); doc.text('OBLIGATORIU', M+CW, y, {align:'right'}); }
+    else{ doc.setTextColor(120,120,120); doc.text('util', M+CW, y, {align:'right'}); }
+    doc.setFont('helvetica','normal'); doc.setDrawColor(230,230,230); doc.line(M, y+1, M+CW, y+1);
     y+=6;
   });
 
-  const pn = doc.internal.getNumberOfPages();
-  for(let p=1;p<=pn;p++){
+  // Footer pe fiecare pagina
+  for(let p=1;p<=doc.internal.getNumberOfPages();p++){
     doc.setPage(p);
-    doc.setFillColor(0,91,127);
-    doc.rect(0,287,W,10,'F');
+    doc.setFillColor(0,91,127); doc.rect(0,287,W,10,'F');
     doc.setTextColor(255,255,255); doc.setFontSize(8);
-    doc.text('CRC Energy | contact@crcenergy.ro | +40 XXX XXX XXX',M,293);
-    doc.text('Pagina '+p+' / '+pn,W-M,293,{align:'right'});
+    doc.text('CRC Energy | contact@crcenergy.ro', M, 293);
+    doc.text(`Pagina ${p} / ${doc.internal.getNumberOfPages()}`, W-M, 293, {align:'right'});
   }
 
-  const fname = 'CRC_Raport_'+d.cui+'_'+today.replace(/\./g,'-')+'.pdf';
-  doc.save(fname);
+  doc.save(`CRC_Raport_${d.cui}_${today.replace(/\./g,'-')}.pdf`);
+  showToast('Raport PDF generat cu succes!');
 }
 
-function sendToChat(){
-  if(!firmData){ alert('Caută mai întâi o firmă.'); return; }
+/* =========================================================
+   Copy summary to clipboard
+   ========================================================= */
+function copyResume(){
+  if(!firmData){ showToast('Caută mai întâi o firmă.', 'ti-alert-triangle'); return; }
   const d = firmData;
-  const MW = parseFloat(document.getElementById('pMW').value)||0;
-  const MWh = parseFloat(document.getElementById('pMWh').value)||0;
-  const elig = parseFloat(document.getElementById('pElig').value)||0;
+  const MW     = parseFloat(document.getElementById('pMW').value)||0;
+  const MWh    = parseFloat(document.getElementById('pMWh').value)||0;
+  const elig   = parseFloat(document.getElementById('pElig').value)||0;
   const eurMWh = parseFloat(document.getElementById('pEurMWh').value)||0;
-  const grant = Math.min(eurMWh*MWh, elig, 15000000);
-  const score = Math.max(0,Math.round((1-(eurMWh-35000)/(69000-35000))*100));
-  const ratio = MW>0?MWh/MW:0;
-  sendPrompt(`Generează un email profesional în română către clientul nostru cu următoarele date, prezentând oportunitatea de finanțare FM 2026 Stocare Stand-Alone:
+  const grant  = Math.min(eurMWh*MWh, elig, 15_000_000);
+  const score  = Math.max(0,Math.round((1-(eurMWh-35000)/(69000-35000))*100));
+  const ratio  = MW>0?MWh/MW:0;
+  const intens = elig>0?Math.round(grant/elig*100):100;
 
-FIRMA: ${d.denumire} (CUI ${d.cui})
-PROIECT: ${MW} MW / ${MWh} MWh (raport ${ratio.toFixed(1)} h)
-GRANT ESTIMAT: ${Math.round(grant).toLocaleString('ro-RO')} EUR (intensitate ${elig>0?Math.round(grant/elig*100):100}%)
-EUR/MWh solicitat: ${eurMWh.toLocaleString('ro-RO')}
-PUNCTAJ ESTIMAT: ${score}/100
-PREFINANȚARE: ${Math.round(grant*0.2).toLocaleString('ro-RO')} EUR (20%)
+  const txt = `=== RAPORT FM STOCARE 2026 — CRC ENERGY ===
+Firmă: ${d.denumire} (CUI ${d.cui})
+Registru: ${d.nr_reg_com} | CAEN: ${d.caen_principal}${d.caen_desc?' – '+d.caen_desc:''}
+Adresă: ${d.adresa}
 
-Emailul trebuie să fie scurt, profesional, să sublinieze valoarea grantului și urgența (buget limitat 150M EUR), să invite la o întâlnire. Semnează din partea CRC Energy.`);
+PROIECT
+Putere: ${MW} MW / Capacitate: ${MWh} MWh (raport ${ratio.toFixed(1)}h)
+EUR/MWh solicitat: ${Number(eurMWh).toLocaleString('ro-RO')}
+Cheltuieli eligibile: ${Number(elig).toLocaleString('ro-RO')} EUR
+
+FINANȚARE
+Grant estimat: ${Math.round(grant).toLocaleString('ro-RO')} EUR (intensitate ${intens}%)
+Prefinanțare 20%: ${Math.round(grant*0.2).toLocaleString('ro-RO')} EUR
+Contribuție proprie: ${Math.round(elig-grant).toLocaleString('ro-RO')} EUR
+Punctaj estimat: ${score}/100
+
+Generat de aplicația CRC Energy FM Stocare 2026.`;
+
+  navigator.clipboard.writeText(txt)
+    .then(()=>showToast('Rezumat copiat în clipboard!'))
+    .catch(()=>showToast('Nu s-a putut copia. Copiază manual din PDF.', 'ti-alert-triangle'));
 }
 
+/* =========================================================
+   Reset
+   ========================================================= */
 function resetAll(){
   firmData = null;
-  document.getElementById('cuiInput').value='';
-  document.getElementById('firmCard').style.display='none';
-  document.getElementById('resultArea').style.display='none';
+  document.getElementById('cuiInput').value = '';
+  document.getElementById('firmCard').classList.remove('visible');
+  document.getElementById('resultArea').classList.remove('visible');
+  hideError();
+  document.getElementById('loadingMsg').classList.remove('visible');
 }
 </script>
+</body>
+</html>
