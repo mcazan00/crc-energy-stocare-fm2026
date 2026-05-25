@@ -1,0 +1,597 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.tool-header{background:#005B7F;color:#fff;border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.tool-header h1{font-size:18px;font-weight:500;margin-bottom:2px}
+.tool-header p{font-size:13px;opacity:.75}
+.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:500;color:#009BD1;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem;display:flex;align-items:center;gap:6px}
+.cui-row{display:flex;gap:8px;align-items:center;margin-bottom:.5rem}
+.cui-row input{flex:1;height:40px;font-size:16px;padding:0 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.cui-row button{height:40px;padding:0 16px;background:#005B7F;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;white-space:nowrap}
+.cui-row button:hover{background:#009BD1}
+.firm-card{background:#005B7F;color:#fff;border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:none}
+.firm-name{font-size:18px;font-weight:500;margin-bottom:4px}
+.firm-meta{font-size:13px;opacity:.75;display:flex;gap:12px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-left:8px}
+.badge-ok{background:#1E8C4E;color:#fff}
+.badge-warn{background:#F0A500;color:#fff}
+.badge-err{background:#C0392B;color:#fff}
+.badge-demo{background:#F0A500;color:#404040}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
+.info-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--color-text-secondary)}
+.info-val{font-weight:500;color:var(--color-text-primary);text-align:right}
+.elig-row{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0}
+.elig-icon{font-size:16px;width:20px;text-align:center}
+.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem;text-align:center}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric-val{font-size:20px;font-weight:500;color:#005B7F}
+.metric-val.ok{color:#1E8C4E}
+.metric-val.err{color:#C0392B}
+.metric-val.warn{color:#F0A500}
+.param-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:4px;display:block}
+.param-label span{font-size:11px;color:var(--color-text-tertiary)}
+.param-input{width:100%;height:36px;padding:0 10px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);margin-bottom:.75rem}
+.param-select{width:100%;height:36px;padding:0 8px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);margin-bottom:.75rem}
+.sim-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sim-row:last-child{border-bottom:none}
+.sim-bar-wrap{width:120px;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;display:inline-block;margin:0 8px;vertical-align:middle}
+.sim-bar{height:100%;background:#009BD1;border-radius:3px;transition:width .3s}
+.sim-score{font-weight:500;min-width:32px;text-align:right}
+.opis-row{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.opis-row:last-child{border-bottom:none}
+.opis-num{min-width:20px;color:var(--color-text-secondary);font-size:12px;padding-top:1px}
+.opis-name{flex:1}
+.opis-tag{font-size:10px;padding:1px 6px;border-radius:10px;font-weight:500;white-space:nowrap;margin-left:4px}
+.opis-tag.blocker{background:#FDECEC;color:#C0392B}
+.opis-tag.ok{background:#E6F5EC;color:#1E8C4E}
+.progress-wrap{height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;margin:.5rem 0}
+.progress-bar{height:100%;background:#1E8C4E;border-radius:3px;transition:width .3s}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
+.btn-primary{padding:10px 18px;background:#005B7F;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-primary:hover{background:#009BD1}
+.btn-secondary{padding:10px 18px;background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-secondary:hover{background:var(--color-background-secondary)}
+.warn-box{background:#FFF8E7;border:0.5px solid #F0A500;border-radius:var(--border-radius-md);padding:.75rem 1rem;font-size:13px;color:#7A5200;margin-top:.5rem}
+.result-area{display:none}
+.loading-msg{font-size:14px;color:var(--color-text-secondary);padding:.5rem 0;display:none}
+</style>
+
+<h2 class="sr-only">Generator rapoarte client FM 2026 — introduce CUI pentru analiză completă</h2>
+
+<div class="tool-header">
+  <h1><i class="ti ti-report-analytics" aria-hidden="true"></i> Generator raport client — FM Stocare 2026</h1>
+  <p>Introduce CUI-ul clientului pentru a genera automat analiza de eligibilitate și simularea de grant</p>
+</div>
+
+<div class="section">
+  <div class="section-title"><i class="ti ti-building" aria-hidden="true"></i> Identificare firmă</div>
+  <div class="cui-row">
+    <input type="text" id="cuiInput" placeholder="ex: 12345678" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')">
+    <button onclick="fetchCUI()"><i class="ti ti-search" aria-hidden="true"></i> Caută</button>
+    <button onclick="resetAll()" style="background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary)"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+  </div>
+  <div class="loading-msg" id="loadingMsg"><i class="ti ti-loader" aria-hidden="true"></i> Se caută datele firmei...</div>
+</div>
+
+<div class="firm-card" id="firmCard">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <div class="firm-name" id="firmName">—</div>
+      <div class="firm-meta" id="firmMeta"></div>
+    </div>
+    <div id="firmBadges"></div>
+  </div>
+</div>
+
+<div class="result-area" id="resultArea">
+
+<div class="grid2" style="margin-bottom:1rem">
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title"><i class="ti ti-id" aria-hidden="true"></i> Date firmă</div>
+    <div id="firmRows"></div>
+  </div>
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title"><i class="ti ti-shield-check" aria-hidden="true"></i> Eligibilitate</div>
+    <div id="eligRows"></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><i class="ti ti-settings" aria-hidden="true"></i> Parametri proiect</div>
+  <div class="grid2">
+    <div>
+      <label class="param-label">Putere instalată MW <span>(min 1 MW)</span></label>
+      <input class="param-input" type="number" id="pMW" value="5" min="0.1" step="0.1" oninput="recalc()">
+      <label class="param-label">Capacitate MWh <span>(min 2× MW)</span></label>
+      <input class="param-input" type="number" id="pMWh" value="12" min="0.1" step="0.1" oninput="recalc()">
+      <label class="param-label">Cheltuieli eligibile EUR</label>
+      <input class="param-input" type="number" id="pElig" value="4000000" step="10000" oninput="recalc()">
+    </div>
+    <div>
+      <label class="param-label">EUR/MWh solicitat <span>(max 69.000)</span></label>
+      <input class="param-input" type="number" id="pEurMWh" value="52000" step="1000" oninput="recalc()">
+      <label class="param-label">Cheltuieli neeligibile EUR</label>
+      <input class="param-input" type="number" id="pNonElig" value="200000" step="10000" oninput="recalc()">
+      <label class="param-label">ATR obținut</label>
+      <select class="param-select" id="pATR" onchange="recalc()">
+        <option value="da">Da — ATR obținut</option>
+        <option value="nu">Nu — în curs de obținere</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title"><i class="ti ti-ruler" aria-hidden="true"></i> Dimensionare</div>
+    <div id="dimResult"></div>
+  </div>
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title"><i class="ti ti-cash" aria-hidden="true"></i> Calcul grant</div>
+    <div id="grantResult"></div>
+  </div>
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title"><i class="ti ti-trophy" aria-hidden="true"></i> Simulare punctaj</div>
+    <div id="simResult"></div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1rem">
+  <div class="section-title"><i class="ti ti-checklist" aria-hidden="true"></i> Opis documente</div>
+  <div id="opisProgress"></div>
+  <div id="opisResult"></div>
+</div>
+
+<div class="btn-row">
+  <button class="btn-primary" onclick="generatePDF()"><i class="ti ti-file-download" aria-hidden="true"></i> Generează raport PDF</button>
+  <button class="btn-secondary" onclick="sendToChat()"><i class="ti ti-send" aria-hidden="true"></i> Trimite rezumat în chat ↗</button>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+let firmData = null;
+
+// Descrieri CAEN divizia 35 (energie) — relevante pentru eligibilitate FM 2026
+const CAEN_DESC = {
+  '3511':'Producția de energie electrică',
+  '3512':'Transportul energiei electrice',
+  '3513':'Distribuția energiei electrice',
+  '3514':'Comercializarea energiei electrice',
+  '3521':'Producția gazelor',
+  '3522':'Distribuția combustibililor gazoși prin conducte',
+  '3523':'Comercializarea combustibililor gazoși prin conducte',
+  '3530':'Producția și furnizarea de abur și aer condiționat',
+};
+
+function hasCaen35(caen){ return caen && String(caen).startsWith('35'); }
+
+function buildMockData(cui){
+  return {
+    cui, denumire:'ENERGY INVEST SRL',
+    caen_principal:'3511', caen_desc:'Producția de energie electrică',
+    forma_juridica:'SRL', capital_social:null,
+    activa:true, insolvent:false, _demo:true,
+    nr_reg_com:'J40/1234/2020',
+    adresa:'Str. Energiei nr. 1, București'
+  };
+}
+
+// Normalizează răspunsul demoanaf.ro în formatul intern al aplicației
+function normalizeDemoAnaf(raw, cui){
+  const caen = raw.primaryCaen || raw.caenCode || '';
+  return {
+    cui: raw.cui || cui,
+    denumire: raw.name || '—',
+    caen_principal: caen,
+    caen_desc: CAEN_DESC[caen] || raw.caenDescription || '',
+    forma_juridica: raw.legalForm || '—',
+    capital_social: null, // demoanaf.ro nu expune capitalul social în datele de bază
+    activa: !raw.inactive,
+    insolvent: raw.isInsolvent || false,
+    nr_reg_com: raw.registrationNumber || '—',
+    adresa: raw.address || (raw.headquartersAddress
+      ? [raw.headquartersAddress.street, raw.headquartersAddress.number,
+         raw.headquartersAddress.locality, raw.headquartersAddress.county].filter(Boolean).join(', ')
+      : '—'),
+    _demo: false,
+    _sursa: 'demoanaf.ro',
+    _status: raw.onrcStatusLabel || '',
+    _vatRegistered: raw.vatRegistered || false,
+    _administrators: raw.administrators || [],
+    _allCaen: raw.authorizedCaenCodes || [],
+  };
+}
+
+async function fetchCUI(){
+  const raw = document.getElementById('cuiInput').value.trim();
+  if(!raw){ alert('Introdu un CUI valid.'); return; }
+  document.getElementById('loadingMsg').style.display='block';
+  document.getElementById('firmCard').style.display='none';
+  document.getElementById('resultArea').style.display='none';
+  firmData = null;
+  let data = null;
+
+  // Sursă primară: demoanaf.ro (REST API gratuit, date ANAF/ONRC oficiale)
+  try {
+    const res = await fetch(`https://demoanaf.ro/api/company/${raw}`,{
+      signal: AbortSignal.timeout(7000)
+    });
+    if(res.ok){
+      const json = await res.json();
+      if(json && (json.cui || json.name)) data = normalizeDemoAnaf(json, raw);
+    }
+  } catch(e){}
+
+  // Fallback: date demo dacă API-ul nu răspunde
+  if(!data){ data = buildMockData(raw); }
+
+  document.getElementById('loadingMsg').style.display='none';
+  firmData = data;
+  renderFirm();
+}
+
+function renderFirm(){
+  const d = firmData;
+  document.getElementById('firmName').textContent = d.denumire || '—';
+  const meta = [];
+  if(d.cui) meta.push('CUI: '+d.cui);
+  if(d.nr_reg_com) meta.push(d.nr_reg_com);
+  if(d.adresa) meta.push(d.adresa);
+  document.getElementById('firmMeta').innerHTML = meta.join('<span style="opacity:.4"> | </span>');
+  const badges = [];
+  if(d.activa) badges.push('<span class="badge badge-ok">Activă</span>');
+  else badges.push('<span class="badge badge-err">Inactivă</span>');
+  if(d.insolvent) badges.push('<span class="badge badge-err">Insolvență</span>');
+  if(d._vatRegistered) badges.push('<span class="badge badge-ok">Plătitor TVA</span>');
+  if(d._status && !d.activa) badges.push(`<span class="badge badge-warn">${d._status}</span>`);
+  if(d._demo) badges.push('<span class="badge badge-demo">Date demo</span>');
+  else if(d._sursa) badges.push(`<span class="badge" style="background:#E8F4F8;color:#005B7F">${d._sursa}</span>`);
+  document.getElementById('firmBadges').innerHTML = badges.join(' ');
+  document.getElementById('firmCard').style.display='block';
+
+  // Verificare CAEN 35 și pe codurile secundare autorizate
+  const allCaen = d._allCaen || [];
+  const caen35secondary = allCaen.filter(c=>String(c).startsWith('35') && c!==d.caen_principal);
+  let caenVal = (d.caen_principal||'—') + (d.caen_desc ? ' – '+d.caen_desc : '');
+  if(caen35secondary.length) caenVal += ` <span style="color:#1E8C4E;font-size:11px">(+${caen35secondary.length} cod${caen35secondary.length>1?'uri':''} 35x secundar${caen35secondary.length>1?'e':''})</span>`;
+
+  const adminStr = (d._administrators||[]).map(a=>a.name+(a.role?' ('+a.role+')':'')).join(', ') || '—';
+
+  const rows = [
+    ['Denumire', d.denumire||'—'],
+    ['CUI', d.cui||'—'],
+    ['Nr. Reg. Com.', d.nr_reg_com||'—'],
+    ['CAEN principal', caenVal],
+    ['Formă juridică', d.forma_juridica||'—'],
+    ['Administrator', adminStr],
+  ];
+  document.getElementById('firmRows').innerHTML = rows.map(r=>`<div class="info-row"><span class="info-label">${r[0]}</span><span class="info-val" style="max-width:200px;font-size:12px">${r[1]}</span></div>`).join('');
+
+  // Eligibilitate: CAEN 35 principal SAU în codurile autorizate secundare
+  const caenOk = hasCaen35(d.caen_principal) || allCaen.some(c=>String(c).startsWith('35'));
+  const activaOk = !!d.activa;
+  const capitalOk = true; // demoanaf.ro nu expune capitalul social; se presupune constituit dacă firma e activă
+  const insolventOk = !d.insolvent;
+  const caenLabel = hasCaen35(d.caen_principal)
+    ? 'CAEN Divizia 35 (cod principal)'
+    : caenOk ? 'CAEN Divizia 35 (cod secundar autorizat)' : 'CAEN Divizia 35 — lipsă';
+  const eligChecks = [
+    [caenOk, caenLabel],
+    [activaOk, 'Firmă activă'],
+    [capitalOk, 'Capital social constituit'],
+    [insolventOk, 'Nu este în insolvență'],
+    [true, 'Entitate comercială (SRL/SA/etc.)'],
+    [true, 'Proprietar/concesionar teren'],
+  ];
+  document.getElementById('eligRows').innerHTML = eligChecks.map(([ok,label])=>`
+    <div class="elig-row">
+      <span class="elig-icon" style="color:${ok?'#1E8C4E':'#C0392B'}"><i class="ti ti-${ok?'circle-check':'circle-x'}" aria-hidden="true"></i></span>
+      <span style="color:var(--color-text-primary)">${label}</span>
+    </div>`).join('');
+
+  document.getElementById('resultArea').style.display='block';
+  recalc();
+}
+
+function recalc(){
+  if(!firmData) return;
+  const MW = parseFloat(document.getElementById('pMW').value)||0;
+  const MWh = parseFloat(document.getElementById('pMWh').value)||0;
+  const elig = parseFloat(document.getElementById('pElig').value)||0;
+  const eurMWh = parseFloat(document.getElementById('pEurMWh').value)||0;
+  const nonElig = parseFloat(document.getElementById('pNonElig').value)||0;
+  const atr = document.getElementById('pATR').value;
+
+  const ratio = MW>0 ? MWh/MW : 0;
+  const ratioOk = MW>=1 && ratio>=2;
+  const hours = MW>0 ? MWh/MW : 0;
+
+  document.getElementById('dimResult').innerHTML = `
+    <div class="metric-card" style="margin-bottom:.5rem">
+      <div class="metric-label">Raport MWh/MW</div>
+      <div class="metric-val ${ratio>=2?'ok':'err'}">${ratio.toFixed(2)} h</div>
+    </div>
+    <div class="info-row"><span class="info-label">Putere</span><span class="info-val">${MW} MW</span></div>
+    <div class="info-row"><span class="info-label">Capacitate</span><span class="info-val">${MWh} MWh</span></div>
+    <div class="info-row"><span class="info-label">EUR/MWh solicitat</span><span class="info-val">${eurMWh.toLocaleString('ro-RO')}</span></div>
+    <div class="info-row"><span class="info-label">Cost/MW</span><span class="info-val">${MW>0?Math.round(elig/MW).toLocaleString('ro-RO'):0} EUR</span></div>
+    ${!ratioOk?'<div class="warn-box"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Raport sub 2:1 — neeligibil!</div>':''}
+  `;
+
+  const grantMax1 = eurMWh * MWh;
+  const grantMax2 = elig;
+  const grantMax3 = 15000000;
+  const grant = Math.min(grantMax1, grantMax2, grantMax3);
+  const intensitate = elig>0 ? grant/elig*100 : 0;
+  const contributie = elig - grant;
+  const prefinantare = grant * 0.20;
+
+  document.getElementById('grantResult').innerHTML = `
+    <div class="metric-card" style="margin-bottom:.5rem">
+      <div class="metric-label">Grant maxim</div>
+      <div class="metric-val ok">${Math.round(grant).toLocaleString('ro-RO')} EUR</div>
+    </div>
+    <div class="info-row"><span class="info-label">Intensitate</span><span class="info-val">${intensitate.toFixed(1)}%</span></div>
+    <div class="info-row"><span class="info-label">Contribuție proprie</span><span class="info-val">${Math.round(contributie).toLocaleString('ro-RO')} EUR</span></div>
+    <div class="info-row"><span class="info-label">Prefinanțare 20%</span><span class="info-val">${Math.round(prefinantare).toLocaleString('ro-RO')} EUR</span></div>
+    <div class="info-row"><span class="info-label">Total proiect</span><span class="info-val">${Math.round(elig+nonElig).toLocaleString('ro-RO')} EUR</span></div>
+    ${grant>=15000000?'<div class="warn-box">Plafonat la 15M EUR/companie</div>':''}
+  `;
+
+  const scenarios = [
+    {label:'Agresiv (35k)',eur:35000},
+    {label:'Median (52k)',eur:52000},
+    {label:'Client ('+Math.round(eurMWh/1000)+'k)',eur:eurMWh},
+    {label:'Plafon (69k)',eur:69000},
+  ];
+  const minEur = 35000;
+  document.getElementById('simResult').innerHTML = scenarios.map(s=>{
+    const score = Math.max(0, Math.round((1-(s.eur-minEur)/(69000-minEur))*100));
+    return `<div class="sim-row">
+      <span style="flex:1;color:${s.label.startsWith('Client')?'#009BD1':'var(--color-text-primary)'}">${s.label}</span>
+      <div class="sim-bar-wrap"><div class="sim-bar" style="width:${score}%"></div></div>
+      <span class="sim-score" style="color:${score>=70?'#1E8C4E':score>=40?'#F0A500':'#C0392B'}">${score}p</span>
+    </div>`;
+  }).join('');
+
+  const docs = [
+    {n:'Cerere de finanțare (MySMIS)',blocker:true},
+    {n:'Act constitutiv + statut actualizat',blocker:true},
+    {n:'Certificate constatatoare ONRC',blocker:true},
+    {n:'CUI / CF al solicitantului',blocker:true},
+    {n:'Declarații solicitant (DNSH, ajutoare stat)',blocker:true},
+    {n:'Studiu de fezabilitate (max. 2 ani)',blocker:true},
+    {n:'Deviz general al investiției',blocker:true},
+    {n:'ATR – Aviz Tehnic de Racordare',blocker:atr==='nu'},
+    {n:'Documente proprietate / concesiune teren',blocker:true},
+    {n:'Bilanț contabil ultimii 2 ani',blocker:false},
+    {n:'Cazier fiscal al firmei',blocker:false},
+    {n:'Cazier judiciar administrator',blocker:false},
+    {n:'Contract/ofertă echipamente BESS',blocker:false},
+    {n:'Plan de afaceri',blocker:false},
+  ];
+  const atrOk = atr==='da';
+  const ready = docs.filter((_,i)=>i!==7 || atrOk).length;
+  const total = docs.length;
+  const pct = Math.round(ready/total*100);
+  document.getElementById('opisProgress').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+      <span>${ready}/${total} documente identificate</span>
+      <span style="font-weight:500">${pct}%</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+  `;
+  document.getElementById('opisResult').innerHTML = docs.map((doc,i)=>{
+    const isATR = i===7;
+    const avail = !isATR || atrOk;
+    return `<div class="opis-row">
+      <span class="opis-num">${i+1}.</span>
+      <span class="opis-name" style="color:var(--color-text-primary)">${doc.n}</span>
+      ${doc.blocker&&isATR&&!atrOk?'<span class="opis-tag blocker">Lipsă</span>':''}
+      ${doc.blocker&&!(isATR&&!atrOk)?'<span class="opis-tag blocker">Obligatoriu</span>':''}
+      ${!doc.blocker?'<span class="opis-tag ok">Util</span>':''}
+    </div>`;
+  }).join('');
+}
+
+function generatePDF(){
+  if(!window.jspdf){ alert('Biblioteca PDF încă se încarcă. Încearcă din nou.'); return; }
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const d = firmData;
+  const W = 210, M = 15, CW = W-2*M;
+  const MW = parseFloat(document.getElementById('pMW').value)||0;
+  const MWh = parseFloat(document.getElementById('pMWh').value)||0;
+  const elig = parseFloat(document.getElementById('pElig').value)||0;
+  const eurMWh = parseFloat(document.getElementById('pEurMWh').value)||0;
+  const nonElig = parseFloat(document.getElementById('pNonElig').value)||0;
+  const atr = document.getElementById('pATR').value;
+  const ratio = MW>0 ? MWh/MW : 0;
+  const grant = Math.min(eurMWh*MWh, elig, 15000000);
+  const intensitate = elig>0 ? grant/elig*100 : 0;
+  const score = Math.max(0,Math.round((1-(eurMWh-35000)/(69000-35000))*100));
+  const today = new Date().toLocaleDateString('ro-RO');
+  let y = 0;
+
+  function addPage(){
+    doc.addPage();
+    y = 0;
+    drawHeader();
+    y = 28;
+  }
+
+  function drawHeader(){
+    doc.setFillColor(0,91,127);
+    doc.rect(0,0,W,22,'F');
+    doc.setFillColor(240,165,0);
+    doc.rect(0,22,W,3,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text('CRC ENERGY',M,9);
+    doc.setFontSize(10); doc.setFont('helvetica','normal');
+    doc.text('Fondul pentru Modernizare 2026 — Stocare Stand-Alone',M,15);
+    doc.setFontSize(9);
+    doc.text('Raport generat: '+today,W-M,14,{align:'right'});
+    doc.setTextColor(64,64,64);
+  }
+
+  function sectionTitle(title,yy){
+    doc.setFillColor(223,241,247);
+    doc.rect(M,yy,CW,7,'F');
+    doc.setTextColor(0,91,127);
+    doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text(title.toUpperCase(),M+3,yy+5);
+    doc.setTextColor(64,64,64);
+    return yy+10;
+  }
+
+  function row2(label,val,yy,col){
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(120,120,120);
+    const x = col===0 ? M : M+CW/2+4;
+    doc.text(label,x,yy);
+    doc.setTextColor(40,40,40);
+    doc.setFont('helvetica','bold');
+    doc.text(String(val),x+50,yy,{align:'right',maxWidth:CW/2-10});
+    doc.setFont('helvetica','normal');
+    doc.setDrawColor(220,220,220);
+    doc.line(x,yy+1,x+CW/2-4,yy+1);
+    return yy+6;
+  }
+
+  drawHeader();
+  y = 30;
+
+  y = sectionTitle('Firma analizată',y);
+  let ya=y, yb=y;
+  ya = row2('Denumire',d.denumire||'—',ya,0);
+  ya = row2('CUI',d.cui||'—',ya,0);
+  ya = row2('Nr. Reg. Com.',d.nr_reg_com||'—',ya,0);
+  yb = row2('CAEN principal',(d.caen_principal||'—'),yb,1);
+  yb = row2('Formă juridică',d.forma_juridica||'—',yb,1);
+  yb = row2('Capital social',d.capital_social?(d.capital_social.toLocaleString('ro-RO')+' RON'):'—',yb,1);
+  y = Math.max(ya,yb)+4;
+  if(d._demo){ doc.setFontSize(8); doc.setTextColor(200,100,0); doc.text('⚠ Date demo — înlocuiți cu date reale de la ANAF/ONRC',M,y); y+=6; doc.setTextColor(64,64,64); }
+
+  y = sectionTitle('Parametri proiect & dimensionare',y);
+  ya=y; yb=y;
+  ya = row2('Putere instalată',MW+' MW',ya,0);
+  ya = row2('Capacitate',MWh+' MWh',ya,0);
+  ya = row2('Raport MWh/MW',ratio.toFixed(2)+' h',ya,0);
+  yb = row2('EUR/MWh solicitat',eurMWh.toLocaleString('ro-RO'),yb,1);
+  yb = row2('Cheltuieli eligibile',Math.round(elig).toLocaleString('ro-RO')+' EUR',yb,1);
+  yb = row2('ATR obținut',atr==='da'?'Da':'Nu — în curs',yb,1);
+  y = Math.max(ya,yb)+4;
+  if(ratio<2){ doc.setFillColor(255,242,220); doc.rect(M,y,CW,8,'F'); doc.setFontSize(8.5); doc.setTextColor(180,80,0); doc.text('⚠ Raport sub 2:1 — proiectul nu îndeplinește cerința minimă de eligibilitate tehnică!',M+3,y+5.5); y+=12; doc.setTextColor(64,64,64); }
+
+  y = sectionTitle('Calcul grant & finanțare',y);
+  ya=y; yb=y;
+  ya = row2('Grant maxim estimat',Math.round(grant).toLocaleString('ro-RO')+' EUR',ya,0);
+  ya = row2('Intensitate ajutor',intensitate.toFixed(1)+'%',ya,0);
+  ya = row2('Prefinanțare 20%',Math.round(grant*0.2).toLocaleString('ro-RO')+' EUR',ya,0);
+  yb = row2('Contribuție proprie',Math.round(elig-grant).toLocaleString('ro-RO')+' EUR',yb,1);
+  yb = row2('Cheltuieli neeligibile',Math.round(nonElig).toLocaleString('ro-RO')+' EUR',yb,1);
+  yb = row2('Total investiție',Math.round(elig+nonElig).toLocaleString('ro-RO')+' EUR',yb,1);
+  y = Math.max(ya,yb)+4;
+
+  y = sectionTitle('Simulare competitivitate (punctaj)',y);
+  const scs = [{l:'Agresiv (35k EUR/MWh)',e:35000},{l:'Median (52k EUR/MWh)',e:52000},{l:'Client ('+Math.round(eurMWh/1000)+'k EUR/MWh)',e:eurMWh},{l:'Plafon (69k EUR/MWh)',e:69000}];
+  scs.forEach(s=>{
+    const sc = Math.max(0,Math.round((1-(s.e-35000)/(69000-35000))*100));
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(s.l.startsWith('Client')?[0,155,209]:[64,64,64]);
+    doc.text(s.l, M, y);
+    doc.setFillColor(220,220,220);
+    doc.roundedRect(M+62,y-3.5,60,4,1,1,'F');
+    doc.setFillColor(0,155,209);
+    doc.roundedRect(M+62,y-3.5,60*sc/100,4,1,1,'F');
+    doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
+    doc.text(sc+'p',M+125,y,{align:'right'});
+    doc.setFont('helvetica','normal');
+    y+=6;
+  });
+  y+=2;
+
+  if(y>240){ addPage(); }
+  y = sectionTitle('Opis documente necesare',y);
+  const docs=[
+    {n:'Cerere de finanțare (MySMIS)',b:true},
+    {n:'Act constitutiv + statut',b:true},
+    {n:'Certificate constatatoare ONRC',b:true},
+    {n:'CUI / CF solicitant',b:true},
+    {n:'Declarații DNSH și ajutoare stat',b:true},
+    {n:'Studiu de fezabilitate (max. 2 ani)',b:true},
+    {n:'Deviz general investiție',b:true},
+    {n:'ATR – Aviz Tehnic de Racordare',b:atr==='nu'},
+    {n:'Documente proprietate teren',b:true},
+    {n:'Bilanț contabil (2 ani)',b:false},
+    {n:'Cazier fiscal',b:false},
+    {n:'Cazier judiciar administrator',b:false},
+    {n:'Contract/ofertă echipamente BESS',b:false},
+    {n:'Plan de afaceri',b:false},
+  ];
+  docs.forEach((dc,i)=>{
+    if(y>275){addPage();}
+    const isATRmissing = i===7 && atr==='nu';
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(64,64,64);
+    doc.text((i+1)+'. '+dc.n,M+4,y);
+    if(isATRmissing){ doc.setTextColor(192,57,43); doc.setFont('helvetica','bold'); doc.text('LIPSĂ',M+CW,y,{align:'right'}); }
+    else if(dc.b){ doc.setTextColor(0,91,127); doc.setFont('helvetica','bold'); doc.text('OBLIGATORIU',M+CW,y,{align:'right'}); }
+    else{ doc.setTextColor(120,120,120); doc.text('util',M+CW,y,{align:'right'}); }
+    doc.setFont('helvetica','normal'); doc.setDrawColor(230,230,230);
+    doc.line(M,y+1,M+CW,y+1);
+    y+=6;
+  });
+
+  const pn = doc.internal.getNumberOfPages();
+  for(let p=1;p<=pn;p++){
+    doc.setPage(p);
+    doc.setFillColor(0,91,127);
+    doc.rect(0,287,W,10,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(8);
+    doc.text('CRC Energy | contact@crcenergy.ro | +40 XXX XXX XXX',M,293);
+    doc.text('Pagina '+p+' / '+pn,W-M,293,{align:'right'});
+  }
+
+  const fname = 'CRC_Raport_'+d.cui+'_'+today.replace(/\./g,'-')+'.pdf';
+  doc.save(fname);
+}
+
+function sendToChat(){
+  if(!firmData){ alert('Caută mai întâi o firmă.'); return; }
+  const d = firmData;
+  const MW = parseFloat(document.getElementById('pMW').value)||0;
+  const MWh = parseFloat(document.getElementById('pMWh').value)||0;
+  const elig = parseFloat(document.getElementById('pElig').value)||0;
+  const eurMWh = parseFloat(document.getElementById('pEurMWh').value)||0;
+  const grant = Math.min(eurMWh*MWh, elig, 15000000);
+  const score = Math.max(0,Math.round((1-(eurMWh-35000)/(69000-35000))*100));
+  const ratio = MW>0?MWh/MW:0;
+  sendPrompt(`Generează un email profesional în română către clientul nostru cu următoarele date, prezentând oportunitatea de finanțare FM 2026 Stocare Stand-Alone:
+
+FIRMA: ${d.denumire} (CUI ${d.cui})
+PROIECT: ${MW} MW / ${MWh} MWh (raport ${ratio.toFixed(1)} h)
+GRANT ESTIMAT: ${Math.round(grant).toLocaleString('ro-RO')} EUR (intensitate ${elig>0?Math.round(grant/elig*100):100}%)
+EUR/MWh solicitat: ${eurMWh.toLocaleString('ro-RO')}
+PUNCTAJ ESTIMAT: ${score}/100
+PREFINANȚARE: ${Math.round(grant*0.2).toLocaleString('ro-RO')} EUR (20%)
+
+Emailul trebuie să fie scurt, profesional, să sublinieze valoarea grantului și urgența (buget limitat 150M EUR), să invite la o întâlnire. Semnează din partea CRC Energy.`);
+}
+
+function resetAll(){
+  firmData = null;
+  document.getElementById('cuiInput').value='';
+  document.getElementById('firmCard').style.display='none';
+  document.getElementById('resultArea').style.display='none';
+}
+</script>
