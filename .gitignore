@@ -1,0 +1,8 @@
+# Documente interne — nu se includ în repo
+*.docx
+*.doc
+*.pdf
+*.xlsx
+
+# OS
+.DS_Store
