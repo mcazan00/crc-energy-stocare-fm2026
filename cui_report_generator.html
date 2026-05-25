@@ -588,50 +588,42 @@ function buildMockData(cui){
 
 /* =========================================================
    Normalize demoanaf.ro response
+   API returnează: { success: true, data: { cui, name, caenCode, ... } }
    ========================================================= */
-function normalizeDemoAnaf(raw, cui){
-  const caen = String(raw.primaryCaen || raw.caenCode || '');
-  const addr = raw.address || (raw.headquartersAddress
-    ? [raw.headquartersAddress.street, raw.headquartersAddress.number,
-       raw.headquartersAddress.locality, raw.headquartersAddress.county]
-      .filter(Boolean).join(', ')
-    : '—');
+function normalizeDemoAnaf(d, cui){
+  // d = răspunsul din câmpul `data`
+  const caen = String(d.caenCode || '');
+  const hq   = d.headquartersAddress || {};
+  const addr = d.address ||
+    [hq.street, hq.number, hq.locality, hq.county].filter(Boolean).join(', ') || '—';
   return {
-    cui: raw.cui || cui,
-    denumire: raw.name || '—',
-    caen_principal: caen,
-    caen_desc: CAEN_DESC[caen] || '',
-    forma_juridica: raw.legalForm || '—',
-    activa: !raw.inactive,
-    insolvent: !!raw.isInsolvent,
-    nr_reg_com: raw.registrationNumber || '—',
-    adresa: addr,
-    _demo: false,
-    _sursa: 'demoanaf.ro',
-    _status: raw.onrcStatusLabel || '',
-    _vatRegistered: !!raw.vatRegistered,
-    _administrators: raw.administrators || [],
-    _allCaen: (raw.authorizedCaenCodes || []).map(String),
+    cui:           d.cui || cui,
+    denumire:      d.name || '—',
+    caen_principal:caen,
+    caen_desc:     CAEN_DESC[caen] || '',
+    forma_juridica:d.legalForm || '—',
+    activa:        !d.inactive,
+    insolvent:     !!d.isInsolvent,
+    nr_reg_com:    d.registrationNumber || '—',
+    adresa:        addr,
+    _demo:         false,
+    _sursa:        'demoanaf.ro',
+    _status:       d.onrcStatusLabel || '',
+    _vatRegistered:!!d.vatRegistered,
+    _administrators: d.administrators || [],
+    _allCaen:      (d.authorizedCaenCodes || []).map(String),
   };
 }
 
 /* =========================================================
-   Fetch company data
+   Fetch company data — demoanaf.ro suportă CORS pentru github.io
    ========================================================= */
-async function tryFetch(url, timeout=7000){
-  const ctrl = new AbortController();
-  const tid = setTimeout(()=>ctrl.abort(), timeout);
-  try {
-    const r = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if(!r.ok) return null;
-    return await r.json();
-  } catch(e){ clearTimeout(tid); return null; }
-}
-
 async function fetchCUI(){
   const cui = document.getElementById('cuiInput').value.trim();
-  if(!cui || cui.length < 2){ showToast('Introdu un CUI valid (minim 2 cifre)', 'ti-alert-triangle'); return; }
+  if(!cui || cui.length < 2){
+    showToast('Introdu un CUI valid (minim 2 cifre)', 'ti-alert-triangle');
+    return;
+  }
 
   document.getElementById('loadingMsg').classList.add('visible');
   document.getElementById('firmCard').classList.remove('visible');
@@ -639,26 +631,35 @@ async function fetchCUI(){
   hideError();
   firmData = null;
 
-  let raw = null;
+  let companyData = null;
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 8000);
 
-  // 1. Încearcă direct demoanaf.ro
-  raw = await tryFetch(`https://demoanaf.ro/api/company/${cui}`);
+    const res = await fetch(`https://demoanaf.ro/api/company/${cui}`, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    const json = await res.json();
 
-  // 2. Fallback prin CORS proxy dacă direct e blocat
-  if(!raw || (!raw.cui && !raw.name)){
-    raw = await tryFetch(`https://corsproxy.io/?url=https://demoanaf.ro/api/company/${cui}`);
+    if(json.success === true && json.data){
+      // Răspuns normal: { success: true, data: {...} }
+      companyData = normalizeDemoAnaf(json.data, cui);
+    } else if(json.success === false){
+      // CUI negăsit
+      const msg = json.error?.message || 'CUI negăsit în baza de date ANAF.';
+      showError(`demoanaf.ro: ${msg}`);
+    } else if(json.cui || json.name){
+      // Format fără wrapper (fallback)
+      companyData = normalizeDemoAnaf(json, cui);
+    }
+  } catch(e){
+    showError('Eroare conexiune demoanaf.ro. Se afișează date demonstrative.');
   }
 
   document.getElementById('loadingMsg').classList.remove('visible');
 
-  if(raw && (raw.cui || raw.name)){
-    firmData = normalizeDemoAnaf(raw, cui);
-  } else {
-    // Date demo cu avertisment
-    firmData = buildMockData(cui);
-    showError('Nu s-au putut prelua datele reale. Se afișează date demonstrative.');
-  }
-
+  firmData = companyData || buildMockData(cui);
   renderFirm();
 }
 
@@ -850,9 +851,19 @@ function recalc(){
 /* =========================================================
    Generate PDF
    ========================================================= */
+// jsPDF nu suportă diacritice românești cu fontul implicit Helvetica
+// → normalizăm textul înainte de a-l scrie în PDF
+function pdfText(s){
+  return String(s == null ? '—' : s)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')   // elimină combining marks (ă→a, î→i, etc.)
+    .replace(/[^\x00-\x7F]/g, '?');    // orice alt caracter non-ASCII → ?
+}
+
 function generatePDF(){
-  if(!firmData){ showToast('Caută mai întâi o firmă.', 'ti-alert-triangle'); return; }
-  if(!window.jspdf){ showToast('Biblioteca PDF se încarcă, încearcă din nou.', 'ti-loader'); return; }
+  if(!firmData){ showToast('Cauta mai intai o firma.', 'ti-alert-triangle'); return; }
+  if(!window.jspdf){ showToast('Biblioteca PDF se incarca, incearca din nou.', 'ti-loader'); return; }
+  try {
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({unit:'mm', format:'a4'});
   const d = firmData;
@@ -869,6 +880,9 @@ function generatePDF(){
   const today  = new Date().toLocaleDateString('ro-RO');
   let y = 0;
 
+  // Toate textele trec prin pdfText() — elimină diacritice incompatibile cu Helvetica
+  function T(s){ return pdfText(s); }
+
   function drawHeader(){
     doc.setFillColor(0,91,127); doc.rect(0,0,W,22,'F');
     doc.setFillColor(240,165,0); doc.rect(0,22,W,3,'F');
@@ -876,7 +890,7 @@ function generatePDF(){
     doc.setFontSize(13); doc.setFont('helvetica','bold');
     doc.text('CRC ENERGY', M, 9);
     doc.setFontSize(10); doc.setFont('helvetica','normal');
-    doc.text('Fondul pentru Modernizare 2026 — Stocare Stand-Alone', M, 15);
+    doc.text('Fondul pentru Modernizare 2026 - Stocare Stand-Alone', M, 15);
     doc.setFontSize(9);
     doc.text('Raport: '+today, W-M, 14, {align:'right'});
     doc.setTextColor(64,64,64);
@@ -887,7 +901,7 @@ function generatePDF(){
   function secTitle(title, yy){
     doc.setFillColor(223,241,247); doc.rect(M,yy,CW,7,'F');
     doc.setTextColor(0,91,127); doc.setFontSize(9); doc.setFont('helvetica','bold');
-    doc.text(title.toUpperCase(), M+3, yy+5);
+    doc.text(T(title).toUpperCase(), M+3, yy+5);
     doc.setTextColor(64,64,64);
     return yy+10;
   }
@@ -895,9 +909,9 @@ function generatePDF(){
   function row2(label, val, yy, col){
     const x = col===0 ? M : M+CW/2+4;
     doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-    doc.setTextColor(120,120,120); doc.text(label, x, yy);
+    doc.setTextColor(120,120,120); doc.text(T(label), x, yy);
     doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
-    doc.text(String(val), x+CW/2-4, yy, {align:'right', maxWidth:CW/2-10});
+    doc.text(T(val), x+CW/2-4, yy, {align:'right', maxWidth:CW/2-10});
     doc.setFont('helvetica','normal');
     doc.setDrawColor(220,220,220); doc.line(x, yy+1, x+CW/2-4, yy+1);
     return yy+6;
@@ -905,73 +919,101 @@ function generatePDF(){
 
   drawHeader(); y=30;
 
-  y = secTitle('Firma analizată', y);
+  y = secTitle('Firma analizata', y);
   let ya=y, yb=y;
-  ya = row2('Denumire', d.denumire||'—', ya, 0);
-  ya = row2('CUI', d.cui||'—', ya, 0);
-  ya = row2('Nr. Reg. Com.', d.nr_reg_com||'—', ya, 0);
-  yb = row2('CAEN principal', d.caen_principal||'—', yb, 1);
-  yb = row2('Formă juridică', d.forma_juridica||'—', yb, 1);
+  ya = row2('Denumire',     d.denumire||'—',              ya, 0);
+  ya = row2('CUI',          String(d.cui||'—'),            ya, 0);
+  ya = row2('Nr. Reg. Com.',d.nr_reg_com||'—',            ya, 0);
+  yb = row2('CAEN',         (d.caen_principal||'—')+' - '+(d.caen_desc||''), yb, 1);
+  yb = row2('Forma juridica',d.forma_juridica||'—',       yb, 1);
   yb = row2('Administrator', d._administrators.length ? d._administrators[0].name : '—', yb, 1);
   y = Math.max(ya,yb)+4;
-  if(d._demo){ doc.setFontSize(8); doc.setTextColor(200,100,0); doc.text('⚠ Date demonstrative — verificați în ANAF/ONRC', M, y); y+=6; doc.setTextColor(64,64,64); }
+  if(d._demo){
+    doc.setFontSize(8); doc.setTextColor(200,100,0);
+    doc.text('! Date demonstrative - verificati in ANAF/ONRC', M, y);
+    y+=6; doc.setTextColor(64,64,64);
+  }
 
-  y = secTitle('Parametri proiect & dimensionare', y);
+  y = secTitle('Parametri proiect si dimensionare', y);
   ya=y; yb=y;
-  ya = row2('Putere instalată', MW+' MW', ya, 0);
-  ya = row2('Capacitate', MWh+' MWh', ya, 0);
-  ya = row2('Raport MWh/MW', ratio.toFixed(2)+' h', ya, 0);
-  yb = row2('EUR/MWh solicitat', Number(eurMWh).toLocaleString('ro-RO'), yb, 1);
-  yb = row2('Cheltuieli eligibile', Math.round(elig).toLocaleString('ro-RO')+' EUR', yb, 1);
-  yb = row2('ATR obținut', atr==='da'?'Da':'Nu — în curs', yb, 1);
+  ya = row2('Putere instalata',   MW+' MW',                           ya, 0);
+  ya = row2('Capacitate',         MWh+' MWh',                         ya, 0);
+  ya = row2('Raport MWh/MW',      ratio.toFixed(2)+' h',              ya, 0);
+  yb = row2('EUR/MWh solicitat',  Number(eurMWh).toLocaleString('ro-RO'), yb, 1);
+  yb = row2('Chelt. eligibile',   Math.round(elig).toLocaleString('ro-RO')+' EUR', yb, 1);
+  yb = row2('ATR obtinut',        atr==='da'?'Da':'Nu - in curs',    yb, 1);
   y = Math.max(ya,yb)+4;
-  if(ratio<2){ doc.setFillColor(255,242,220); doc.rect(M,y,CW,8,'F'); doc.setFontSize(8.5); doc.setTextColor(180,80,0); doc.text('⚠ Raport sub 2:1 — neeligibil tehnic!', M+3, y+5.5); y+=12; doc.setTextColor(64,64,64); }
+  if(ratio<2){
+    doc.setFillColor(255,242,220); doc.rect(M,y,CW,8,'F');
+    doc.setFontSize(8.5); doc.setTextColor(180,80,0);
+    doc.text('! Raport sub 2:1 - proiectul nu indeplineste cerinta minima de eligibilitate tehnica!', M+3, y+5.5);
+    y+=12; doc.setTextColor(64,64,64);
+  }
 
-  y = secTitle('Calcul grant & finanțare', y);
+  y = secTitle('Calcul grant si finantare', y);
   ya=y; yb=y;
   ya = row2('Grant maxim estimat', Math.round(grant).toLocaleString('ro-RO')+' EUR', ya, 0);
-  ya = row2('Intensitate ajutor', intens.toFixed(1)+'%', ya, 0);
-  ya = row2('Prefinanțare 20%', Math.round(grant*0.2).toLocaleString('ro-RO')+' EUR', ya, 0);
-  yb = row2('Contribuție proprie', Math.round(elig-grant).toLocaleString('ro-RO')+' EUR', yb, 1);
-  yb = row2('Cheltuieli neeligibile', Math.round(nonElig).toLocaleString('ro-RO')+' EUR', yb, 1);
-  yb = row2('Total investiție', Math.round(elig+nonElig).toLocaleString('ro-RO')+' EUR', yb, 1);
+  ya = row2('Intensitate ajutor',  intens.toFixed(1)+'%',             ya, 0);
+  ya = row2('Prefinantare 20%',    Math.round(grant*0.2).toLocaleString('ro-RO')+' EUR', ya, 0);
+  yb = row2('Contributie proprie', Math.round(elig-grant).toLocaleString('ro-RO')+' EUR', yb, 1);
+  yb = row2('Chelt. neeligibile',  Math.round(nonElig).toLocaleString('ro-RO')+' EUR',    yb, 1);
+  yb = row2('Total investitie',    Math.round(elig+nonElig).toLocaleString('ro-RO')+' EUR', yb, 1);
   y = Math.max(ya,yb)+4;
 
   y = secTitle('Simulare competitivitate (punctaj)', y);
-  [{l:'Agresiv (35k EUR/MWh)',e:35000},{l:'Median (52k EUR/MWh)',e:52000},{l:'Client ('+Math.round(eurMWh/1000)+'k EUR/MWh)',e:eurMWh},{l:'Plafon (69k EUR/MWh)',e:69000}]
-    .forEach(s=>{
-      const sc = Math.max(0,Math.round((1-(s.e-35000)/(69000-35000))*100));
-      doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-      doc.setTextColor(s.l.startsWith('Client')?[0,155,209]:[64,64,64]);
-      doc.text(s.l, M, y);
-      doc.setFillColor(220,220,220); doc.roundedRect(M+65,y-3.5,55,4,1,1,'F');
-      doc.setFillColor(0,155,209); doc.roundedRect(M+65,y-3.5,55*sc/100,4,1,1,'F');
-      doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
-      doc.text(sc+'p', M+123, y, {align:'right'});
-      doc.setFont('helvetica','normal'); y+=6;
-    });
+  [
+    {l:'Agresiv (35k EUR/MWh)',  e:35000},
+    {l:'Median (52k EUR/MWh)',   e:52000},
+    {l:'Client ('+Math.round(eurMWh/1000)+'k EUR/MWh)', e:eurMWh},
+    {l:'Plafon (69k EUR/MWh)',   e:69000}
+  ].forEach(s=>{
+    const sc = Math.max(0,Math.round((1-(s.e-35000)/(69000-35000))*100));
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(s.l.startsWith('Client')?[0,155,209]:[64,64,64]);
+    doc.text(s.l, M, y);
+    doc.setFillColor(220,220,220); doc.roundedRect(M+65,y-3.5,55,4,1,1,'F');
+    doc.setFillColor(0,155,209);   doc.roundedRect(M+65,y-3.5,55*sc/100,4,1,1,'F');
+    doc.setTextColor(40,40,40); doc.setFont('helvetica','bold');
+    doc.text(sc+'p', M+123, y, {align:'right'});
+    doc.setFont('helvetica','normal'); y+=6;
+  });
   y+=2;
 
   if(y>240) addPage();
   y = secTitle('Opis documente necesare', y);
   const docs=[
-    {n:'Cerere de finanțare (MySMIS)',b:true},{n:'Act constitutiv + statut',b:true},
-    {n:'Certificate constatatoare ONRC',b:true},{n:'CUI / CF solicitant',b:true},
-    {n:'Declarații DNSH și ajutoare stat',b:true},{n:'Studiu de fezabilitate (max. 2 ani)',b:true},
-    {n:'Deviz general investiție',b:true},{n:'ATR – Aviz Tehnic de Racordare',b:atr==='nu'},
-    {n:'Documente proprietate teren',b:true},{n:'Bilanț contabil (2 ani)',b:false},
-    {n:'Cazier fiscal',b:false},{n:'Cazier judiciar administrator',b:false},
-    {n:'Contract/ofertă echipamente BESS',b:false},{n:'Plan de afaceri',b:false},
+    {n:'Cerere de finantare (MySMIS)',              b:true},
+    {n:'Act constitutiv + statut actualizat',        b:true},
+    {n:'Certificate constatatoare ONRC',             b:true},
+    {n:'CUI / Certificat de inregistrare fiscala',   b:true},
+    {n:'Declaratii DNSH si ajutoare de stat',        b:true},
+    {n:'Studiu de fezabilitate (max. 2 ani)',         b:true},
+    {n:'Deviz general al investitiei',               b:true},
+    {n:'ATR - Aviz Tehnic de Racordare',             b:atr==='nu'},
+    {n:'Documente proprietate/concesiune teren',     b:true},
+    {n:'Bilant contabil ultimii 2 ani',              b:false},
+    {n:'Cazier fiscal al firmei',                    b:false},
+    {n:'Cazier judiciar administrator',              b:false},
+    {n:'Contract/oferta echipamente BESS',           b:false},
+    {n:'Plan de afaceri',                            b:false},
   ];
   docs.forEach((dc,i)=>{
     if(y>275) addPage();
     const missing = i===7 && atr==='nu';
     doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(64,64,64);
     doc.text((i+1)+'. '+dc.n, M+4, y);
-    if(missing){ doc.setTextColor(192,57,43); doc.setFont('helvetica','bold'); doc.text('LIPSĂ', M+CW, y, {align:'right'}); }
-    else if(dc.b){ doc.setTextColor(0,91,127); doc.setFont('helvetica','bold'); doc.text('OBLIGATORIU', M+CW, y, {align:'right'}); }
-    else{ doc.setTextColor(120,120,120); doc.text('util', M+CW, y, {align:'right'}); }
-    doc.setFont('helvetica','normal'); doc.setDrawColor(230,230,230); doc.line(M, y+1, M+CW, y+1);
+    if(missing){
+      doc.setTextColor(192,57,43); doc.setFont('helvetica','bold');
+      doc.text('LIPSA', M+CW, y, {align:'right'});
+    } else if(dc.b){
+      doc.setTextColor(0,91,127); doc.setFont('helvetica','bold');
+      doc.text('OBLIGATORIU', M+CW, y, {align:'right'});
+    } else {
+      doc.setTextColor(120,120,120);
+      doc.text('util', M+CW, y, {align:'right'});
+    }
+    doc.setFont('helvetica','normal'); doc.setDrawColor(230,230,230);
+    doc.line(M, y+1, M+CW, y+1);
     y+=6;
   });
 
@@ -981,11 +1023,16 @@ function generatePDF(){
     doc.setFillColor(0,91,127); doc.rect(0,287,W,10,'F');
     doc.setTextColor(255,255,255); doc.setFontSize(8);
     doc.text('CRC Energy | contact@crcenergy.ro', M, 293);
-    doc.text(`Pagina ${p} / ${doc.internal.getNumberOfPages()}`, W-M, 293, {align:'right'});
+    doc.text('Pagina '+p+' / '+doc.internal.getNumberOfPages(), W-M, 293, {align:'right'});
   }
 
-  doc.save(`CRC_Raport_${d.cui}_${today.replace(/\./g,'-')}.pdf`);
-  showToast('Raport PDF generat cu succes!');
+  const fname = 'CRC_Raport_'+d.cui+'_'+today.replace(/\./g,'-')+'.pdf';
+  doc.save(fname);
+  showToast('Raport PDF salvat: '+fname);
+  } catch(err){
+    console.error('PDF error:', err);
+    showToast('Eroare PDF: '+err.message, 'ti-alert-circle');
+  }
 }
 
 /* =========================================================
